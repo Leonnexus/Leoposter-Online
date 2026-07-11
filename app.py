@@ -1,10 +1,137 @@
+import os
 import random
 import string
+import uuid
+from datetime import datetime
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, join_room, emit
+import pandas as pd
+from sqlalchemy import create_engine
 
-# Importa o seu banco de palavras do outro arquivo
 from banco_palavras import BANCO_PALAVRAS
+
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///leoposter.db')
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+
+def obter_ranking_dinamico(tipo):
+    try:
+        df = pd.read_sql_table("Rodadas", engine)
+        df = df[df["Dia"] != "SOMATÓRIA"].copy()
+        if df.empty: return []
+
+        df["Data_Real"] = pd.to_datetime(df["Dia"], format="%d/%m/%Y", errors="coerce")
+        hoje = pd.Timestamp(datetime.now().date())
+
+        if tipo == "Dia":
+            df = df[df["Data_Real"] == hoje]
+        elif tipo == "Semana":
+            df = df[(df["Data_Real"].dt.isocalendar().week == hoje.isocalendar().week) &
+                    (df["Data_Real"].dt.isocalendar().year == hoje.isocalendar().year)]
+        
+        if df.empty: return []
+
+        ranking = []
+        for nome, group in df.groupby("Nome"):
+            pts = group["Pontos na Rodada"].sum()
+            rodadas = len(group)
+            media = round(pts / rodadas, 2) if rodadas > 0 else 0
+            ranking.append({"Jogador": nome, "Pontuação Total": int(pts), "Média de Pontos": float(media)})
+
+        ranking.sort(key=lambda x: (x["Média de Pontos"], x["Pontuação Total"]), reverse=True)
+        return ranking
+    except ValueError:
+        return []
+
+def carregar_dados_sala_do_banco(sala):
+    try:
+        df_palavras = pd.read_sql_table("Palavras_Usadas", engine)
+        sala['palavras_usadas'] = set(df_palavras["Palavra"].dropna().astype(str).tolist())
+    except ValueError:
+        pass
+
+    try:
+        df_eventos = pd.read_sql_table("Estado_Eventos", engine)
+        if not df_eventos.empty:
+            sala['acumulado_caos'] = int(df_eventos["Acumulado_Caos"].iloc[0])
+            sala['acumulado_trapaca'] = int(df_eventos["Acumulado_Trapaca"].iloc[0])
+    except ValueError:
+        pass
+
+def salvar_banco_dados(pontos_da_rodada, placar, id_partida, detalhes_rodada, historico_impostores, palavras_usadas, acumulado_caos, acumulado_trapaca):
+    dia_hoje = datetime.now().strftime("%d/%m/%Y")
+    
+    try:
+        df = pd.read_sql_table("Rodadas", engine)
+        df = df[df["Dia"] != "SOMATÓRIA"]
+    except ValueError:
+        df = pd.DataFrame(columns=["ID_Partida", "Nome", "Papel", "Votos_Recebidos", "Acertos_Detetive", "Votos_Efetuados", "Pontos na Rodada", "Placar Geral da Partida", "Dia"])
+        
+    novas_linhas = [{
+        "ID_Partida": id_partida, "Nome": j, "Papel": detalhes_rodada[j]["Papel"],
+        "Votos_Recebidos": detalhes_rodada[j]["Votos_Recebidos"], "Acertos_Detetive": detalhes_rodada[j]["Acertos_Detetive"],
+        "Votos_Efetuados": detalhes_rodada[j]["Votos_Efetuados"], "Pontos na Rodada": int(pts),
+        "Placar Geral da Partida": int(placar[j]), "Dia": str(dia_hoje)
+    } for j, pts in pontos_da_rodada.items()]
+    
+    df = pd.concat([df, pd.DataFrame(novas_linhas)], ignore_index=True)
+    df["Dia"] = df["Dia"].astype(str)
+    
+    df_hoje = df[df["Dia"] == str(dia_hoje)]
+    soma = df_hoje.groupby("Nome")["Pontos na Rodada"].sum().reset_index()
+    soma["Nome"] = soma["Nome"].apply(lambda x: f"TOTAL {x}")
+    soma["Dia"] = "SOMATÓRIA"
+    df_final_rodadas = pd.concat([df, soma], ignore_index=True)
+    
+    df_raw = df[df["Dia"] != "SOMATÓRIA"].copy()
+    resumo_list, analytics_list = [], []
+    for nome, group in df_raw.groupby("Nome"):
+        partidas = group["ID_Partida"].nunique()
+        rodadas = len(group)
+        pts_totais = group["Pontos na Rodada"].sum()
+        media = pts_totais / rodadas if rodadas > 0 else 0
+        vitorias = sum(group["Pontos na Rodada"] > 0)
+        
+        resumo_list.append({"Jogador": nome, "Partidas Jogadas": int(partidas), "Rodadas Jogadas": int(rodadas), "Pontuação Total": int(pts_totais), "Média de Pontos": round(float(media), 2), "Vitórias em Rodadas": int(vitorias)})
+        
+        impostor_df = group[group["Papel"] == "Impostor"]
+        vz_imp = len(impostor_df)
+        fugas = len(impostor_df[impostor_df["Pontos na Rodada"] > 0])
+        taxa_fuga = (fugas / vz_imp * 100) if vz_imp > 0 else 0
+        
+        inocente_df = group[group["Papel"] == "Inocente"]
+        vt_efetuados = inocente_df["Votos_Efetuados"].sum()
+        acertos = inocente_df["Acertos_Detetive"].sum()
+        taxa_acerto = (acertos / vt_efetuados * 100) if vt_efetuados > 0 else 0
+        bode = inocente_df["Votos_Recebidos"].sum()
+        
+        analytics_list.append({"Jogador": nome, "Taxa de Fuga (%)": round(taxa_fuga, 2), "Faro de Detetive (%)": round(taxa_acerto, 2), "Votos Sofridos Sendo Inocente": int(bode), "Título": "Membro Comum"})
+        
+    df_resumo = pd.DataFrame(resumo_list)
+    df_analytics = pd.DataFrame(analytics_list)
+    
+    if not df_analytics.empty:
+        mf, md, mb = df_analytics["Taxa de Fuga (%)"].max(), df_analytics["Faro de Detetive (%)"].max(), df_analytics["Votos Sofridos Sendo Inocente"].max()
+        for idx, row in df_analytics.iterrows():
+            titulos = []
+            if row["Taxa de Fuga (%)"] == mf and mf > 0: titulos.append("Loki")
+            if row["Faro de Detetive (%)"] == md and md > 0: titulos.append("Sherlock")
+            if row["Votos Sofridos Sendo Inocente"] == mb and mb > 0: titulos.append("Bode Expiatório")
+            if titulos: df_analytics.at[idx, "Título"] = " | ".join(titulos)
+
+    df_historico_impostores = pd.DataFrame(list(historico_impostores.items()), columns=["Jogador", "Vezes_Impostor"])
+    df_palavras = pd.DataFrame(list(palavras_usadas), columns=["Palavra"])
+    df_estado_eventos = pd.DataFrame([{"Acumulado_Caos": acumulado_caos, "Acumulado_Trapaca": acumulado_trapaca}])
+    
+    with engine.begin() as conn:
+        df_final_rodadas.to_sql("Rodadas", conn, if_exists="replace", index=False)
+        df_resumo.to_sql("Resumo", conn, if_exists="replace", index=False)
+        df_analytics.to_sql("Analytics", conn, if_exists="replace", index=False)
+        df_historico_impostores.to_sql("Historico_Impostores", conn, if_exists="replace", index=False)
+        df_palavras.to_sql("Palavras_Usadas", conn, if_exists="replace", index=False)
+        df_estado_eventos.to_sql("Estado_Eventos", conn, if_exists="replace", index=False)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'leoposter_chave_super_secreta'
@@ -26,24 +153,31 @@ def tela_jogador():
 def tela_admin():
     return render_template('admin.html')
 
-@socketio.on('connect')
-def handle_connect():
-    pass
-
 @socketio.on('criar_sala')
 def criar_sala():
     codigo = gerar_codigo_sala()
     salas_ativas[codigo] = {
         'host_sid': request.sid,
+        'id_partida': str(uuid.uuid4())[:8],
         'jogadores': [],
-        # Memória da Partida
         'historico_impostores': {},
         'palavras_usadas': set(),
-        'acumulado_caos': 10,  # Valores padrão
-        'acumulado_trapaca': 20
+        'acumulado_caos': 10,
+        'acumulado_trapaca': 20,
+        'impostores_ultima_rodada': [] ,
+        'placar': {},
+        'fila_interrogatorio': []
     }
+    carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
-    emit('sala_criada_sucesso', {'codigo': codigo})
+    temas_disponiveis = list(BANCO_PALAVRAS.keys())
+    emit('sala_criada_sucesso', {'codigo': codigo, 'temas': temas_disponiveis})
+
+@socketio.on('solicitar_coroacao')
+def solicitar_coroacao(dados):
+    tipo = dados.get('tipo')
+    ranking = obter_ranking_dinamico(tipo)
+    emit('receber_coroacao', {'tipo': tipo, 'ranking': ranking}, to=request.sid)
 
 @socketio.on('entrar_na_sala')
 def entrar_na_sala(dados):
@@ -51,7 +185,6 @@ def entrar_na_sala(dados):
     codigo = dados.get('codigo', '').strip().upper()
 
     if codigo in salas_ativas:
-        # Garante que o jogador inicie com histórico 0 se for a primeira vez
         if nome not in salas_ativas[codigo]['historico_impostores']:
             salas_ativas[codigo]['historico_impostores'][nome] = 0
 
@@ -70,17 +203,14 @@ def iniciar_partida(dados):
     sala = salas_ativas.get(codigo)
     if not sala: return
 
-    # 1. Puxa as configurações enviadas pelo Host (TV)
     categoria = dados.get('categoria')
     imp_base = int(dados.get('imp_base', 1))
     prob_caos = int(dados.get('caos', 10))
     prob_trapaca = int(dados.get('trapaca', 20))
 
-    # Nivelamento do PRD se o Host mudou o slider
     sala['acumulado_caos'] = max(sala['acumulado_caos'], prob_caos)
     sala['acumulado_trapaca'] = max(sala['acumulado_trapaca'], prob_trapaca)
 
-    # 2. Sorteio da Palavra
     if categoria == "Aleatório":
         categoria = random.choice(list(BANCO_PALAVRAS.keys()))
     
@@ -92,7 +222,6 @@ def iniciar_partida(dados):
     palavra_secreta, dica_vaga = random.choice(opcoes)
     sala['palavras_usadas'].add(palavra_secreta)
 
-    # 3. Lógica do PRD (Caos e Trapaça)
     caos_ativo = random.random() < (sala['acumulado_caos'] / 100.0)
     trapaca_ativo = random.random() < (sala['acumulado_trapaca'] / 100.0)
 
@@ -102,11 +231,15 @@ def iniciar_partida(dados):
     if trapaca_ativo: sala['acumulado_trapaca'] = prob_trapaca
     else: sala['acumulado_trapaca'] = min(100, sala['acumulado_trapaca'] + prob_trapaca)
 
-    # 4. Sorteio de Papéis
     qtd_impostores = min(len(sala['jogadores']) - 1, imp_base + (1 if caos_ativo else 0))
     
     candidatos = [j['nome'] for j in sala['jogadores']]
-    pesos = [max(0.01, 1.0 - (0.33 * min(sala['historico_impostores'][n], 3))) for n in candidatos]
+    pesos = []
+    for j in candidatos:
+        peso_base = max(0.01, 1.0 - (0.33 * min(sala['historico_impostores'].get(j, 0), 3)))
+        if j in sala['impostores_ultima_rodada']:
+            peso_base *= 0.5
+        pesos.append(peso_base)
     
     impostores_sorteados = []
     for _ in range(qtd_impostores):
@@ -115,36 +248,112 @@ def iniciar_partida(dados):
         idx = candidatos.index(escolhido)
         candidatos.pop(idx); pesos.pop(idx)
 
-    # Atualiza o histórico
+    sala['impostores_ultima_rodada'] = list(impostores_sorteados)
+
     for imp in impostores_sorteados:
         sala['historico_impostores'][imp] += 1
     if sum(1 for c in sala['historico_impostores'].values() if c >= 3) >= 3:
         for k in sala['historico_impostores']: sala['historico_impostores'][k] = 0
 
-    # 5. Entrega os papéis secretamente para cada Celular via SID
+    sala['impostores_atuais'] = impostores_sorteados
+    sala['palavra_atual'] = palavra_secreta
+    sala['votos'] = {}
+
+    sala['fila_interrogatorio'] = [j['nome'] for j in sala['jogadores'] if j['nome'] in [p['nome'] for p in sala['jogadores']]]
+    random.shuffle(sala['fila_interrogatorio'])
+    primeiro_a_falar = sala['fila_interrogatorio'].pop(0) if sala['fila_interrogatorio'] else "Ninguém"
+
     for jogador in sala['jogadores']:
         eh_impostor = jogador['nome'] in impostores_sorteados
-        
         payload = {
             'papel': 'impostor' if eh_impostor else 'inocente',
             'tema': categoria,
             'caos_ativo': caos_ativo
         }
-
         if eh_impostor:
             payload['palavra_ou_dica'] = dica_vaga
             if trapaca_ativo:
-                aliados = [i for i in impostores_sorteados if i != jogador['nome']]
-                payload['equipe'] = aliados
+                payload['equipe'] = [i for i in impostores_sorteados if i != jogador['nome']]
         else:
             payload['palavra_ou_dica'] = palavra_secreta
 
-        # Manda o pacote SÓ para o celular deste jogador
         emit('distribuir_papeis', payload, to=jogador['sid'])
 
-    # Avisa a TV que a rodada começou (para trocar de tela)
-    emit('partida_iniciada_host', {'msg': 'ok'}, to=sala['host_sid'])
+    emit('partida_iniciada_host', {'primeiro': primeiro_a_falar}, to=sala['host_sid'])
+
+@socketio.on('iniciar_votacao')
+def iniciar_votacao(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if not sala: return
+    jogadores_nomes = [j['nome'] for j in sala['jogadores']]
+    emit('ir_para_tela_votacao', {'jogadores': jogadores_nomes}, to=codigo)
+    emit('votacao_iniciada_host', {}, to=sala['host_sid'])
+
+@socketio.on('enviar_voto')
+def receber_voto(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if sala:
+        sala['votos'][dados.get('nome')] = dados.get('voto')
+        emit('voto_recebido_host', {'total_votos': len(sala['votos']), 'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
+
+@socketio.on('encerrar_votacao')
+def encerrar_votacao(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if not sala: return
+
+    votos = sala.get('votos', {})
+    contagem = {}
+    for eleitor, votado in votos.items():
+        contagem[votado] = contagem.get(votado, 0) + 1
+    
+    eliminados = []
+    if contagem:
+        max_votos = max(contagem.values())
+        eliminados = [k for k, v in contagem.items() if v == max_votos]
+
+    pontos_da_rodada = {}
+    detalhes_rodada = {}
+    
+    for j in sala['jogadores']:
+        nome = j['nome']
+        eh_impostor = nome in sala['impostores_atuais']
+        votos_recebidos = contagem.get(nome, 0)
+        voto_dado = votos.get(nome, "")
+        acertos_detetive = 1 if (not eh_impostor and voto_dado in sala['impostores_atuais']) else 0
+        
+        pts = 0
+        if eh_impostor:
+            if nome not in eliminados: pts = 2
+        else:
+            if acertos_detetive > 0: pts = 1
+            
+        pontos_da_rodada[nome] = pts
+        sala['placar'][nome] = sala['placar'].get(nome, 0) + pts
+        
+        detalhes_rodada[nome] = {
+            "Papel": "Impostor" if eh_impostor else "Inocente",
+            "Votos_Recebidos": votos_recebidos,
+            "Acertos_Detetive": acertos_detetive,
+            "Votos_Efetuados": 1 if voto_dado else 0
+        }
+        
+    salvar_banco_dados(pontos_da_rodada, sala['placar'], sala['id_partida'], detalhes_rodada, sala['historico_impostores'], sala['palavras_usadas'], sala['acumulado_caos'], sala['acumulado_trapaca'])
+
+    resultado_msg = f"A palavra secreta era: <strong>{sala['palavra_atual']}</strong>.<br><br>"
+    if len(eliminados) == 1:
+        bode = eliminados[0]
+        if bode in sala['impostores_atuais']:
+            resultado_msg += f"<span style='color:#2ecc71'>O Impostor ({bode}) foi executado!</span>"
+        else:
+            resultado_msg += f"<span style='color:#e74c3c'>Um Inocente ({bode}) foi sacrificado!</span>"
+    else:
+         resultado_msg += "<span style='color:#f1c40f'>Votação dividida! Ninguém foi eliminado nesta rodada.</span>"
+
+    emit('resultado_votacao_host', {'mensagem': resultado_msg, 'votos': contagem, 'pontos': sala['placar']}, to=sala['host_sid'])
+    emit('votacao_encerrada_celular', {}, to=codigo)
 
 if __name__ == '__main__':
-    print("🚀 Iniciando Servidor Leoposter Online...")
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=8080)
