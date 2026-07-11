@@ -1,3 +1,9 @@
+# ==========================================
+# OBRIGATÓRIO: ESTE DEVE SER O PRIMEIRO COMANDO DO APP.PY
+import eventlet
+eventlet.monkey_patch()
+# ==========================================
+
 import os
 import random
 import string
