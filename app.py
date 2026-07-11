@@ -265,7 +265,7 @@ def iniciar_partida(dados):
     sala['palavra_atual'] = palavra_secreta
     sala['votos'] = {}
 
-    sala['fila_interrogatorio'] = [j['nome'] for j in sala['jogadores'] if j['nome'] in [p['nome'] for p in sala['jogadores']]]
+    sala['fila_interrogatorio'] = [j['nome'] for j in sala['jogadores']]
     random.shuffle(sala['fila_interrogatorio'])
     primeiro_a_falar = sala['fila_interrogatorio'].pop(0) if sala['fila_interrogatorio'] else "Ninguém"
 
@@ -294,7 +294,7 @@ def iniciar_votacao(dados):
     if not sala: return
     jogadores_nomes = [j['nome'] for j in sala['jogadores']]
     emit('ir_para_tela_votacao', {'jogadores': jogadores_nomes}, to=codigo)
-    emit('votacao_iniciada_host', {}, to=sala['host_sid'])
+    emit('votacao_iniciada_host', {'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
 
 @socketio.on('enviar_voto')
 def receber_voto(dados):
@@ -346,7 +346,10 @@ def encerrar_votacao(dados):
             "Votos_Efetuados": 1 if voto_dado else 0
         }
         
-    salvar_banco_dados(pontos_da_rodada, sala['placar'], sala['id_partida'], detalhes_rodada, sala['historico_impostores'], sala['palavras_usadas'], sala['acumulado_caos'], sala['acumulado_trapaca'])
+    try:
+        salvar_banco_dados(pontos_da_rodada, sala['placar'], sala['id_partida'], detalhes_rodada, sala['historico_impostores'], sala['palavras_usadas'], sala['acumulado_caos'], sala['acumulado_trapaca'])
+    except Exception as e:
+        print("Erro ao salvar no banco:", e)
 
     resultado_msg = f"A palavra secreta era: <strong>{sala['palavra_atual']}</strong>.<br><br>"
     if len(eliminados) == 1:
