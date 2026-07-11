@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Leoposter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #2b2b2b; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;}
+        .box { background: #3a3a3a; padding: 30px; border-radius: 15px; width: 85%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input, button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; border: none; font-size: 18px; box-sizing: border-box; }
+        input { background: #1e1e1e; color: white; text-align: center; text-transform: uppercase; font-weight: bold;}
+        button { background-color: #3498db; color: white; font-weight: bold; cursor: pointer; }
+        .escondido { display: none; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Estilos do Cartão do Jogo */
+        #tela-jogo { width: 90%; max-width: 400px; padding: 20px; border-radius: 15px; border: 4px solid transparent; background-color: #1e1e1e;}
+        .inocente { border-color: #2ecc71 !important; }
+        .impostor { border-color: #e74c3c !important; }
+        .palavra-gigante { font-size: 40px; font-weight: bold; margin: 20px 0; font-family: Impact, sans-serif;}
+    </style>
+</head>
+<body>
+
+    <div class="box" id="tela-login">
+        <h1 style="margin: 0 0 5px 0;">Leoposter</h1>
+        <p style="color: gray; margin-bottom: 20px;">Entrar na Partida</p>
+        <input type="text" id="ipt-nome" placeholder="SEU NOME" autocomplete="off">
+        <input type="text" id="ipt-codigo" placeholder="CÓDIGO DA SALA" maxlength="4" autocomplete="off">
+        <button onclick="entrar()">ENTRAR</button>
+    </div>
+
+    <div class="box escondido" id="tela-espera">
+        <h2>Você está na sala!</h2>
+        <p style="color: #2ecc71; font-weight: bold;">Identidade: <span id="meu-nome"></span></p>
+        <div class="spinner"></div>
+        <p style="color: gray;">Olhe para a tela principal e aguarde...</p>
+    </div>
+
+    <div id="tela-jogo" class="escondido">
+        <h3 id="tema-display" style="color: gray; text-transform: uppercase; margin-top: 0;">TEMA</h3>
+        
+        <h2 id="papel-titulo" style="font-size: 28px; margin: 10px 0;">PAPEL</h2>
+        <div id="caos-alerta" style="color: yellow; font-weight: bold; font-size: 14px; margin-bottom: 10px;" class="escondido">[ ELEMENTO DO CAOS ATIVO ]</div>
+        
+        <p style="color: gray; margin-bottom: 0;" id="subtitulo">A Palavra é:</p>
+        <div class="palavra-gigante" id="palavra-secreta">----</div>
+        
+        <p id="trapaca-alerta" style="color: orange; font-weight: bold; font-size: 14px;" class="escondido">Sua equipe: <span id="equipe-nomes"></span></p>
+
+        <button onclick="esconderTela()" style="background-color: #555;">ESCONDER TELA</button>
+    </div>
+
+    <div class="box escondido" id="tela-escondida">
+        <h2>🤫 Shhh...</h2>
+        <p>Preste atenção na discussão.</p>
+    </div>
+
+    <script>
+        const socket = io();
+
+        function entrar() {
+            const nome = document.getElementById('ipt-nome').value;
+            const codigo = document.getElementById('ipt-codigo').value;
+            socket.emit('entrar_na_sala', { nome: nome, codigo: codigo });
+        }
+
+        socket.on('erro_conexao', (dados) => { alert(dados.mensagem); });
+
+        socket.on('entrada_sucesso', (dados) => {
+            document.getElementById('tela-login').classList.add('escondido');
+            document.getElementById('tela-espera').classList.remove('escondido');
+            document.getElementById('meu-nome').innerText = dados.nome;
+        });
+
+        // O MOMENTO MÁGICO: O Servidor envia a carta para este celular
+        socket.on('distribuir_papeis', (dados) => {
+            document.getElementById('tela-espera').classList.add('escondido');
+            const telaJogo = document.getElementById('tela-jogo');
+            telaJogo.classList.remove('escondido');
+
+            document.getElementById('tema-display').innerText = dados.tema;
+            document.getElementById('palavra-secreta').innerText = dados.palavra_ou_dica;
+            
+            // Controle do Caos
+            if (dados.caos_ativo) document.getElementById('caos-alerta').classList.remove('escondido');
+            else document.getElementById('caos-alerta').classList.add('escondido');
+
+            if (dados.papel === 'impostor') {
+                telaJogo.className = 'impostor'; // Borda Vermelha
+                document.getElementById('papel-titulo').innerText = "VOCÊ É O IMPOSTOR";
+                document.getElementById('papel-titulo').style.color = "#e74c3c";
+                document.getElementById('subtitulo').innerText = "A Dica Vaga é:";
+                
+                // Controle da Trapaça (Aliados)
+                if (dados.equipe && dados.equipe.length > 0) {
+                    document.getElementById('trapaca-alerta').classList.remove('escondido');
+                    document.getElementById('equipe-nomes').innerText = dados.equipe.join(', ');
+                } else {
+                    document.getElementById('trapaca-alerta').classList.add('escondido');
+                }
+            } else {
+                telaJogo.className = 'inocente'; // Borda Verde
+                document.getElementById('papel-titulo').innerText = "VOCÊ É INOCENTE";
+                document.getElementById('papel-titulo').style.color = "#2ecc71";
+                document.getElementById('subtitulo').innerText = "A Palavra Secreta é:";
+                document.getElementById('trapaca-alerta').classList.add('escondido');
+            }
+        });
+
+        function esconderTela() {
+            document.getElementById('tela-jogo').classList.add('escondido');
+            document.getElementById('tela-escondida').classList.remove('escondido');
+        }
+    </script>
+</body>
+</html>
