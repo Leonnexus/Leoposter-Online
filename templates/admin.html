@@ -102,9 +102,11 @@
 
             const selectTema = document.getElementById('cfg-tema');
             selectTema.innerHTML = '<option value="Aleatório">🎲 Escolha Aleatória</option>';
-            dados.temas.forEach(tema => {
-                selectTema.innerHTML += `<option value="${tema}">${tema}</option>`;
-            });
+            if (dados.temas) {
+                dados.temas.forEach(tema => {
+                    selectTema.innerHTML += `<option value="${tema}">${tema}</option>`;
+                });
+            }
         });
 
         socket.on('lista_jogadores_atualizada', (dados) => {
@@ -141,10 +143,13 @@
 
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
-        socket.on('votacao_iniciada_host', () => {
+        socket.on('votacao_iniciada_host', (dados) => {
             document.getElementById('painel-jogo').classList.add('escondido');
             document.getElementById('painel-votacao').classList.remove('escondido');
             document.getElementById('votos-contagem').innerText = "0";
+            if(dados && dados.total_jogadores) {
+                document.getElementById('votos-total').innerText = dados.total_jogadores;
+            }
         });
 
         socket.on('voto_recebido_host', (dados) => {
@@ -161,7 +166,7 @@
             
             const ul = document.getElementById('lista-placar-atual');
             ul.innerHTML = '';
-            for (const [nome, pts] of Object.entries(dados.points)) {
+            for (const [nome, pts] of Object.entries(dados.pontos)) {
                 ul.innerHTML += `<li><strong>${nome}</strong>: ${pts} pts acumulados</li>`;
             }
         });
