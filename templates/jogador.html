@@ -19,7 +19,7 @@
         .inocente { border-color: #2ecc71 !important; }
         .impostor { border-color: #e74c3c !important; }
         .palavra-gigante { font-size: 38px; font-weight: bold; margin: 15px 0; font-family: Impact, sans-serif; letter-spacing: 1px; }
-        .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; }
+        .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; }
         .voto-btn:active { background-color: #d35400; }
     </style>
 </head>
@@ -43,7 +43,9 @@
     <div id="tela-jogo" class="escondido">
         <h3 id="tema-display" style="color: #777; text-transform: uppercase; margin-top: 0; letter-spacing: 1px;">TEMA</h3>
         <h2 id="papel-titulo" style="font-size: 26px; margin: 8px 0;">INOCENTE / IMPOSTOR</h2>
+        
         <div id="caos-alerta" style="color: #f1c40f; font-weight: bold; font-size: 13px; margin-bottom: 8px;" class="escondido">⚠️ ADVERTÊNCIA: ELEMENTO DO CAOS ATIVO</div>
+        
         <p style="color: #666; margin-bottom: 0;" id="subtitulo">Sua Informação Secreta:</p>
         <div class="palavra-gigante" id="palavra-secreta">----</div>
         <p id="trapaca-alerta" style="color: #e67e22; font-weight: bold; font-size: 13px; background: #2c1a0a; padding: 8px; border-radius: 4px;" class="escondido">Cúmplices: <span id="equipe-nomes"></span></p>
@@ -58,7 +60,7 @@
     <div class="box escondido" id="tela-votacao">
         <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO SECRETA</h2>
         <p style="color: #aaa; font-size: 14px; margin-bottom: 15px;">Selecione o suspeito que você acredita ser o Impostor:</p>
-        <div id="botoes-votacao"></div>
+        <div id="botoes-votacao" style="max-height: 50vh; overflow-y: auto;"></div>
     </div>
 
     <script>
@@ -77,6 +79,12 @@
 
         socket.on('erro_conexao', (dados) => { alert(dados.mensagem); });
 
+        // Nova função para receber o aviso de expulsão do Host
+        socket.on('foi_expulso', () => {
+            alert("Você foi removido da sala pelo Host principal.");
+            location.reload(); // Recarrega a página para voltar à tela de login
+        });
+
         socket.on('entrada_sucesso', (dados) => {
             document.getElementById('tela-login').classList.add('escondido');
             document.getElementById('tela-espera').classList.remove('escondido');
@@ -93,6 +101,7 @@
             document.getElementById('tema-display').innerText = dados.tema;
             document.getElementById('palavra-secreta').innerText = dados.palavra_ou_dica;
             
+            // O servidor agora garante que o Caos só é "True" para quem for o Impostor. Inocentes recebem False e nunca verão isso.
             if (dados.caos_ativo) document.getElementById('caos-alerta').classList.remove('escondido');
             else document.getElementById('caos-alerta').classList.add('escondido');
 
@@ -131,12 +140,13 @@
             const divBotoes = document.getElementById('botoes-votacao');
             divBotoes.innerHTML = '';
 
-            dados.jogadores.forEach(jogador => {
-                if(jogador !== meu_nome_atual) {
+            dados.jogadores.forEach(j => {
+                if(j.nome !== meu_nome_atual) {
                     const btn = document.createElement('button');
                     btn.className = 'voto-btn';
-                    btn.innerText = jogador;
-                    btn.onclick = () => enviarVoto(jogador);
+                    // Monta o botão já mostrando o emoji do adversário
+                    btn.innerText = `${j.emoji} ${j.nome}`;
+                    btn.onclick = () => enviarVoto(j.nome);
                     divBotoes.appendChild(btn);
                 }
             });
