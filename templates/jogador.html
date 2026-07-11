@@ -63,12 +63,15 @@
 
     <script>
         const socket = io();
+        let meu_nome_atual = "";
+        let codigo_atual = "";
 
         function entrar() {
-            const nome = document.getElementById('ipt-nome').value.trim();
-            const codigo = document.getElementById('ipt-codigo').value.trim();
-            if(nome && codigo) {
-                socket.emit('entrar_na_sala', { nome: nome, codigo: codigo });
+            meu_nome_atual = document.getElementById('ipt-nome').value.trim();
+            codigo_atual = document.getElementById('ipt-codigo').value.trim().toUpperCase();
+            
+            if(meu_nome_atual && codigo_atual) {
+                socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual });
             }
         }
 
@@ -127,10 +130,9 @@
 
             const divBotoes = document.getElementById('botoes-votacao');
             divBotoes.innerHTML = '';
-            const meuNome = document.getElementById('meu-nome').innerText;
 
             dados.jogadores.forEach(jogador => {
-                if(jogador !== meuNome) {
+                if(jogador !== meu_nome_atual) {
                     const btn = document.createElement('button');
                     btn.className = 'voto-btn';
                     btn.innerText = jogador;
@@ -141,14 +143,11 @@
         });
 
         function enviarVoto(nomeVotado) {
-            const meuNome = document.getElementById('meu-nome').innerText;
-            const codigo = document.getElementById('ipt-codigo').value;
-            
-            socket.emit('enviar_voto', { codigo: codigo, nome: meuNome, voto: nomeVotado });
+            socket.emit('enviar_voto', { codigo: codigo_atual, nome: meu_nome_atual, voto: nomeVotado });
             
             document.getElementById('tela-votacao').classList.add('escondido');
             document.getElementById('tela-espera').classList.remove('escondido');
-            document.getElementById('tela-espera').innerHTML = "<h3>Voto Computado!</h3><p style='color:#aaa;'>Aguarde a finalização da apuração pelo Host principal...</p>";
+            document.getElementById('tela-espera').innerHTML = "<h3>Voto Computado!</h3><p style='color:#aaa;'>Aguarde a apuração na tela principal...</p>";
         }
 
         socket.on('votacao_encerrada_celular', () => {
