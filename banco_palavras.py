@@ -81,3 +81,4 @@ BANCO_PALAVRAS = {
         ("Zebra", "África"), ("Canguru", "Bolsa"), ("Coala", "Eucalipto"), ("Panda", "Bambu"), ("Gorila", "Forte"),
         ("Coruja", "Visão"), ("Águia", "Garras"), ("Pinguim", "Gelo"), ("Avestruz", "Corre"), ("Camelo", "Deserto")
     ]
+}
