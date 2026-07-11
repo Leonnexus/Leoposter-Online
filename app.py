@@ -1,5 +1,4 @@
 # ==========================================
-# OBRIGATÓRIO: ESTE DEVE SER O PRIMEIRO COMANDO DO APP.PY
 import eventlet
 eventlet.monkey_patch()
 # ==========================================
@@ -21,6 +20,8 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 engine = create_engine(DATABASE_URL)
+
+EMOJIS_DISPONIVEIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"]
 
 def obter_ranking_dinamico(tipo):
     try:
@@ -191,17 +192,43 @@ def entrar_na_sala(dados):
     codigo = dados.get('codigo', '').strip().upper()
 
     if codigo in salas_ativas:
-        if nome not in salas_ativas[codigo]['historico_impostores']:
-            salas_ativas[codigo]['historico_impostores'][nome] = 0
+        sala = salas_ativas[codigo]
+        
+        # Bloqueia nomes repetidos
+        if any(j['nome'].lower() == nome.lower() for j in sala['jogadores']):
+            emit('erro_conexao', {'mensagem': 'Este nome já está em uso na sala. Escolha outro!'})
+            return
+
+        if nome not in sala['historico_impostores']:
+            sala['historico_impostores'][nome] = 0
+
+        # Atribui Emoji aleatório não utilizado
+        emojis_usados = [j['emoji'] for j in sala['jogadores']]
+        opcoes = [e for e in EMOJIS_DISPONIVEIS if e not in emojis_usados]
+        if not opcoes: opcoes = EMOJIS_DISPONIVEIS
+        meu_emoji = random.choice(opcoes)
 
         join_room(codigo)
-        salas_ativas[codigo]['jogadores'].append({'sid': request.sid, 'nome': nome})
+        sala['jogadores'].append({'sid': request.sid, 'nome': nome, 'emoji': meu_emoji})
         
-        lista_nomes = [j['nome'] for j in salas_ativas[codigo]['jogadores']]
-        emit('lista_jogadores_atualizada', {'jogadores': lista_nomes}, to=codigo)
+        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
         emit('entrada_sucesso', {'nome': nome})
     else:
         emit('erro_conexao', {'mensagem': 'Sala não encontrada!'})
+
+@socketio.on('expulsar_jogador')
+def expulsar_jogador(dados):
+    codigo = dados.get('codigo')
+    nome_expulso = dados.get('nome')
+    sala = salas_ativas.get(codigo)
+    if sala:
+        jogador = next((j for j in sala['jogadores'] if j['nome'] == nome_expulso), None)
+        if jogador:
+            sala['jogadores'].remove(jogador)
+            emit('foi_expulso', {}, to=jogador['sid']) # Avisa o celular para voltar à tela inicial
+            lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+            emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
 
 @socketio.on('iniciar_partida')
 def iniciar_partida(dados):
@@ -265,16 +292,18 @@ def iniciar_partida(dados):
     sala['palavra_atual'] = palavra_secreta
     sala['votos'] = {}
 
-    sala['fila_interrogatorio'] = [j['nome'] for j in sala['jogadores']]
+    sala['fila_interrogatorio'] = list(sala['jogadores'])
     random.shuffle(sala['fila_interrogatorio'])
-    primeiro_a_falar = sala['fila_interrogatorio'].pop(0) if sala['fila_interrogatorio'] else "Ninguém"
+    primeiro = sala['fila_interrogatorio'].pop(0) if sala['fila_interrogatorio'] else None
+    primeiro_nome_fmt = f"{primeiro['emoji']} {primeiro['nome']}" if primeiro else "Ninguém"
 
     for jogador in sala['jogadores']:
         eh_impostor = jogador['nome'] in impostores_sorteados
         payload = {
             'papel': 'impostor' if eh_impostor else 'inocente',
             'tema': categoria,
-            'caos_ativo': caos_ativo
+            # Inocentes NÃO recebem a notificação de Caos
+            'caos_ativo': caos_ativo if eh_impostor else False 
         }
         if eh_impostor:
             payload['palavra_ou_dica'] = dica_vaga
@@ -285,15 +314,15 @@ def iniciar_partida(dados):
 
         emit('distribuir_papeis', payload, to=jogador['sid'])
 
-    emit('partida_iniciada_host', {'primeiro': primeiro_a_falar}, to=sala['host_sid'])
+    emit('partida_iniciada_host', {'primeiro': primeiro_nome_fmt}, to=sala['host_sid'])
 
 @socketio.on('iniciar_votacao')
 def iniciar_votacao(dados):
     codigo = dados.get('codigo')
     sala = salas_ativas.get(codigo)
     if not sala: return
-    jogadores_nomes = [j['nome'] for j in sala['jogadores']]
-    emit('ir_para_tela_votacao', {'jogadores': jogadores_nomes}, to=codigo)
+    jogadores_info = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+    emit('ir_para_tela_votacao', {'jogadores': jogadores_info}, to=codigo)
     emit('votacao_iniciada_host', {'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
 
 @socketio.on('enviar_voto')
@@ -351,17 +380,22 @@ def encerrar_votacao(dados):
     except Exception as e:
         print("Erro ao salvar no banco:", e)
 
-    resultado_msg = f"A palavra secreta era: <strong>{sala['palavra_atual']}</strong>.<br><br>"
-    if len(eliminados) == 1:
-        bode = eliminados[0]
-        if bode in sala['impostores_atuais']:
-            resultado_msg += f"<span style='color:#2ecc71'>O Impostor ({bode}) foi executado!</span>"
-        else:
-            resultado_msg += f"<span style='color:#e74c3c'>Um Inocente ({bode}) foi sacrificado!</span>"
-    else:
-         resultado_msg += "<span style='color:#f1c40f'>Votação dividida! Ninguém foi eliminado nesta rodada.</span>"
+    # Prepara dados ricos para o frontend desenhar o painel de revelação
+    eliminados_info = []
+    for e in eliminados:
+        emoji_e = next((j['emoji'] for j in sala['jogadores'] if j['nome'] == e), "👤")
+        eliminados_info.append({
+            'nome': e,
+            'emoji': emoji_e,
+            'eh_impostor': e in sala['impostores_atuais']
+        })
 
-    emit('resultado_votacao_host', {'mensagem': resultado_msg, 'votos': contagem, 'pontos': sala['placar']}, to=sala['host_sid'])
+    emit('resultado_votacao_host', {
+        'eliminados': eliminados_info,
+        'palavra_atual': sala['palavra_atual'],
+        'pontos': sala['placar']
+    }, to=sala['host_sid'])
+    
     emit('votacao_encerrada_celular', {}, to=codigo)
 
 if __name__ == '__main__':
