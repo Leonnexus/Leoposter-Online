@@ -1,4 +1,9 @@
+Aqui estão os três ficheiros completos, corrigidos e com todas as novas funcionalidades integradas (bloqueio de nomes repetidos, sliders de probabilidade, ocultação de alertas para inocentes, sistema de expulsão, alocação de emojis e o ecrã de suspense com contagem regressiva responsivo).
+
+1. app.py
+Python
 # ==========================================
+# OBRIGATÓRIO: ESTE DEVE SER O PRIMEIRO COMANDO DO APP.PY
 import eventlet
 eventlet.monkey_patch()
 # ==========================================
@@ -194,7 +199,6 @@ def entrar_na_sala(dados):
     if codigo in salas_ativas:
         sala = salas_ativas[codigo]
         
-        # Bloqueia nomes repetidos
         if any(j['nome'].lower() == nome.lower() for j in sala['jogadores']):
             emit('erro_conexao', {'mensagem': 'Este nome já está em uso na sala. Escolha outro!'})
             return
@@ -202,7 +206,6 @@ def entrar_na_sala(dados):
         if nome not in sala['historico_impostores']:
             sala['historico_impostores'][nome] = 0
 
-        # Atribui Emoji aleatório não utilizado
         emojis_usados = [j['emoji'] for j in sala['jogadores']]
         opcoes = [e for e in EMOJIS_DISPONIVEIS if e not in emojis_usados]
         if not opcoes: opcoes = EMOJIS_DISPONIVEIS
@@ -226,7 +229,7 @@ def expulsar_jogador(dados):
         jogador = next((j for j in sala['jogadores'] if j['nome'] == nome_expulso), None)
         if jogador:
             sala['jogadores'].remove(jogador)
-            emit('foi_expulso', {}, to=jogador['sid']) # Avisa o celular para voltar à tela inicial
+            emit('foi_expulso', {}, to=jogador['sid'])
             lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
             emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
 
@@ -256,15 +259,16 @@ def iniciar_partida(dados):
     sala['palavras_usadas'].add(palavra_secreta)
 
     caos_ativo = random.random() < (sala['acumulado_caos'] / 100.0)
-    trapaca_ativo = random.random() < (sala['acumulado_trapaca'] / 100.0)
-
     if caos_ativo: sala['acumulado_caos'] = prob_caos
     else: sala['acumulado_caos'] = min(100, sala['acumulado_caos'] + prob_caos)
 
-    if trapaca_ativo: sala['acumulado_trapaca'] = prob_trapaca
-    else: sala['acumulado_trapaca'] = min(100, sala['acumulado_trapaca'] + prob_trapaca)
-
     qtd_impostores = min(len(sala['jogadores']) - 1, imp_base + (1 if caos_ativo else 0))
+
+    trapaca_ativo = False
+    if qtd_impostores > 1:
+        trapaca_ativo = random.random() < (sala['acumulado_trapaca'] / 100.0)
+        if trapaca_ativo: sala['acumulado_trapaca'] = prob_trapaca
+        else: sala['acumulado_trapaca'] = min(100, sala['acumulado_trapaca'] + prob_trapaca)
     
     candidatos = [j['nome'] for j in sala['jogadores']]
     pesos = []
@@ -302,7 +306,6 @@ def iniciar_partida(dados):
         payload = {
             'papel': 'impostor' if eh_impostor else 'inocente',
             'tema': categoria,
-            # Inocentes NÃO recebem a notificação de Caos
             'caos_ativo': caos_ativo if eh_impostor else False 
         }
         if eh_impostor:
@@ -349,6 +352,8 @@ def encerrar_votacao(dados):
         max_votos = max(contagem.values())
         eliminados = [k for k, v in contagem.items() if v == max_votos]
 
+    foi_eliminado_de_fato = eliminados[0] if len(eliminados) == 1 else None
+
     pontos_da_rodada = {}
     detalhes_rodada = {}
     
@@ -361,7 +366,7 @@ def encerrar_votacao(dados):
         
         pts = 0
         if eh_impostor:
-            if nome not in eliminados: pts = 2
+            if nome != foi_eliminado_de_fato: pts = 2
         else:
             if acertos_detetive > 0: pts = 1
             
@@ -380,7 +385,6 @@ def encerrar_votacao(dados):
     except Exception as e:
         print("Erro ao salvar no banco:", e)
 
-    # Prepara dados ricos para o frontend desenhar o painel de revelação
     eliminados_info = []
     for e in eliminados:
         emoji_e = next((j['emoji'] for j in sala['jogadores'] if j['nome'] == e), "👤")
