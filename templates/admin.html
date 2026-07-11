@@ -2,21 +2,37 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leoposter - Painel de Controle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; text-align: center; margin: 0; padding: 0; }
-        .container { margin: 40px auto; width: 90%; max-width: 900px; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; text-align: center; margin: 0; padding: 0; overflow-x: hidden; }
+        .container { margin: 40px auto; width: 90%; max-width: 900px; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); box-sizing: border-box; }
         button { padding: 14px 28px; font-size: 18px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.2s; }
         button:hover { filter: brightness(1.1); }
         .codigo-gigante { font-size: 75px; letter-spacing: 12px; color: #f1c40f; font-weight: bold; margin: 15px 0; }
         .escondido { display: none !important; }
+        
         .grid-config { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; background: #262626; padding: 20px; border-radius: 10px; margin-top: 20px; }
-        select, input { padding: 12px; font-size: 16px; width: 100%; border-radius: 6px; background: #121212; color: white; border: 1px solid #444; box-sizing: border-box; }
-        ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        li { background: #2c2c2c; padding: 12px 24px; border-radius: 6px; font-size: 18px; border: 1px solid #3a3a3a; }
+        select, input[type="number"], input[type="range"] { width: 100%; border-radius: 6px; box-sizing: border-box; }
+        select, input[type="number"] { padding: 12px; font-size: 16px; background: #121212; color: white; border: 1px solid #444; }
+        
+        /* Grid de Jogadores com Emojis e Botão Expulsar */
+        .grid-jogadores { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 0; list-style: none; }
+        .jogador-card { background: #2c2c2c; padding: 12px 15px; border-radius: 8px; font-size: 18px; border: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; }
+        .btn-expulsar { background: #c0392b; color: white; border: none; border-radius: 6px; width: 35px; height: 35px; cursor: pointer; margin: 0; padding: 0; font-size: 18px; line-height: 1; flex-shrink: 0; }
+        
         .btn-coroacao { background-color: #f39c12; width: auto; margin: 5px; font-size: 14px; padding: 10px 20px; }
         .podio-item { font-size: 22px; margin: 10px 0; font-weight: bold; }
+
+        /* Media Queries para Responsividade Mobile */
+        @media (max-width: 768px) {
+            .container { margin: 20px auto; padding: 20px; width: 95%; }
+            .grid-config { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
+            .codigo-gigante { font-size: 50px; letter-spacing: 8px; }
+            h1 { font-size: 35px !important; }
+            .jogador-card { font-size: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -36,7 +52,7 @@
         <h2>Código da Sala:</h2>
         <div class="codigo-gigante" id="txt-codigo">----</div>
         <p>Acessem pelo celular. Conectados (<span id="contagem">0</span>):</p>
-        <ul id="lista-jogadores"></ul>
+        <ul id="lista-jogadores" class="grid-jogadores"></ul>
 
         <div class="grid-config">
             <div>
@@ -48,12 +64,12 @@
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
             <div>
-                <label>Prob. Caos (%):</label>
-                <input type="number" id="cfg-caos" value="10" min="0" max="100">
+                <label>Prob. Caos: <span id="val-caos">10</span>%</label>
+                <input type="range" id="cfg-caos" value="10" min="0" max="100" step="5" oninput="document.getElementById('val-caos').innerText = this.value">
             </div>
             <div>
-                <label>Prob. Trapaça (%):</label>
-                <input type="number" id="cfg-trapaca" value="20" min="0" max="100">
+                <label>Prob. Trapaça: <span id="val-trapaca">20</span>%</label>
+                <input type="range" id="cfg-trapaca" value="20" min="0" max="100" step="5" oninput="document.getElementById('val-trapaca').innerText = this.value">
             </div>
         </div>
         <button disabled id="btn-iniciar" style="background-color: #555;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
@@ -61,7 +77,7 @@
 
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
-        <h2 style="color: #f1c40f;">Quem inicia o debate: <span id="primeiro-falar">---</span></h2>
+        <h2 style="color: #f1c40f;">Quem inicia o debate: <br><span id="primeiro-falar" style="font-size: 40px;">---</span></h2>
         <p style="font-size: 18px; color: #aaa;">Debatam as pistas. Quando todos concluírem suas declarações, abra a votação.</p>
         <button onclick="irParaVotacao()" style="background-color: #9b59b6;">Abrir Votação nos Dispositivos</button>
     </div>
@@ -72,11 +88,20 @@
         <button onclick="encerrarVotacao()" style="background-color: #e74c3c;">Encerrar Votação e Computar Resultados</button>
     </div>
 
+    <div class="container escondido" id="painel-suspense" style="padding: 100px 20px;">
+        <h2 style="font-size: 35px; color: #aaa; margin: 0;">Revelando o veredito em...</h2>
+        <div id="contagem-regressiva" style="font-size: 150px; font-weight: bold; color: #f1c40f; margin: 0;">3</div>
+    </div>
+
     <div class="container escondido" id="painel-resultado">
         <h1>VEREDITO DA MESA</h1>
-        <p id="texto-resultado" style="font-size: 26px;"></p>
-        <h3 style="color: #f1c40f; margin-top: 30px;">PLACAR DA SESSÃO</h3>
-        <ul id="lista-placar-atual"></ul>
+        <div id="resultado-eliminado" style="font-size: 100px; margin: 10px 0;">👤</div>
+        <div id="texto-resultado" style="font-size: 28px; font-weight: bold; margin-bottom: 20px;"></div>
+        
+        <p id="palavra-revelada" style="font-size: 20px; color: #aaa;"></p>
+
+        <h3 style="color: #f1c40f; margin-top: 40px;">PLACAR DA SESSÃO</h3>
+        <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
         <button onclick="voltarAoLobby()" style="background-color: #34495e;">Avançar para Próxima Rodada</button>
     </div>
 
@@ -112,8 +137,11 @@
         socket.on('lista_jogadores_atualizada', (dados) => {
             const ul = document.getElementById('lista-jogadores');
             ul.innerHTML = '';
-            dados.jogadores.forEach(nome => {
-                ul.innerHTML += `<li>👤 ${nome}</li>`;
+            dados.jogadores.forEach(j => {
+                ul.innerHTML += `<li class="jogador-card">
+                    <span>${j.emoji} <strong>${j.nome}</strong></span>
+                    <button class="btn-expulsar" onclick="expulsar('${j.nome}')" title="Expulsar">✖</button>
+                </li>`;
             });
             document.getElementById('contagem').innerText = dados.jogadores.length;
             
@@ -122,8 +150,18 @@
                 btn.disabled = false;
                 btn.style.backgroundColor = '#8e44ad';
                 btn.innerText = "Iniciar Rodada";
+            } else {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#555';
+                btn.innerText = "Aguardando Jogadores...";
             }
         });
+
+        function expulsar(nomeJogador) {
+            if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
+                socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
+            }
+        }
 
         function iniciarPartida() {
             socket.emit('iniciar_partida', {
@@ -161,15 +199,54 @@
 
         socket.on('resultado_votacao_host', (dados) => {
             document.getElementById('painel-votacao').classList.add('escondido');
+            document.getElementById('painel-suspense').classList.remove('escondido');
+            
+            let count = 3;
+            document.getElementById('contagem-regressiva').innerText = count;
+            
+            // Loop de Contagem Regressiva
+            let interval = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    document.getElementById('contagem-regressiva').innerText = count;
+                } else {
+                    clearInterval(interval);
+                    document.getElementById('painel-suspense').classList.add('escondido');
+                    mostrarResultadoFinal(dados);
+                }
+            }, 1000);
+        });
+
+        function mostrarResultadoFinal(dados) {
             document.getElementById('painel-resultado').classList.remove('escondido');
-            document.getElementById('texto-resultado').innerHTML = dados.mensagem;
+            
+            const divEmoji = document.getElementById('resultado-eliminado');
+            const divTexto = document.getElementById('texto-resultado');
+            
+            if (dados.eliminados.length === 1) {
+                const bode = dados.eliminados[0];
+                divEmoji.innerText = bode.emoji;
+                if (bode.eh_impostor) {
+                    divTexto.innerHTML = `<span style='color:#2ecc71'>O Impostor (${bode.nome}) foi executado!</span>`;
+                } else {
+                    divTexto.innerHTML = `<span style='color:#e74c3c'>Um Inocente (${bode.nome}) foi sacrificado!</span>`;
+                }
+            } else if (dados.eliminados.length > 1) {
+                divEmoji.innerText = "⚖️";
+                divTexto.innerHTML = `<span style='color:#f1c40f'>Votação dividida entre ${dados.eliminados.map(e => e.nome).join(' e ')}! Ninguém foi eliminado.</span>`;
+            } else {
+                divEmoji.innerText = "🕊️";
+                divTexto.innerHTML = `<span style='color:#f1c40f'>Ninguém recebeu votos suficientes. A paz reina.</span>`;
+            }
+
+            document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
             
             const ul = document.getElementById('lista-placar-atual');
             ul.innerHTML = '';
             for (const [nome, pts] of Object.entries(dados.pontos)) {
-                ul.innerHTML += `<li><strong>${nome}</strong>: ${pts} pts acumulados</li>`;
+                ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`;
             }
-        });
+        }
 
         function voltarAoLobby() {
             document.getElementById('painel-resultado').classList.add('escondido');
