@@ -1,7 +1,3 @@
-Aqui estão os três ficheiros completos, corrigidos e com todas as novas funcionalidades integradas (bloqueio de nomes repetidos, sliders de probabilidade, ocultação de alertas para inocentes, sistema de expulsão, alocação de emojis e o ecrã de suspense com contagem regressiva responsivo).
-
-1. app.py
-Python
 # ==========================================
 # OBRIGATÓRIO: ESTE DEVE SER O PRIMEIRO COMANDO DO APP.PY
 import eventlet
