@@ -44,6 +44,26 @@
             <button class="btn-coroacao" onclick="pedirCoroacao('Semana')" style="background-color: #d35400;">👑 Coroação da Semana</button>
             <button class="btn-coroacao" onclick="pedirCoroacao('Geral')" style="background-color: #a04000;">👑 Coroação Geral</button>
         </div>
+        
+        <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 20px;">
+            <button onclick="abrirPainelBanco()" style="background-color: #34495e; font-size: 14px; width: auto; padding: 10px 20px;">⚙️ Gerenciar Banco de Dados</button>
+        </div>
+    </div>
+
+    <div class="container escondido" id="painel-banco">
+        <h1 style="color: #e74c3c; font-size: 30px;">⚙️ ADMINISTRAÇÃO DE DADOS</h1>
+        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis e afetam o banco de dados principal.</p>
+        
+        <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras Usadas</button>
+        <p style="font-size: 13px; color: #888; margin-top: 5px;">Permite que palavras que já foram jogadas voltem a ser sorteadas.</p>
+        
+        <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Histórico de Partidas e Ranking</button>
+        <p style="font-size: 13px; color: #888; margin-top: 5px;">Apaga os placares, títulos e histórico de detetive/fuga de todos os jogadores.</p>
+        
+        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL (Factory Reset)</button>
+        <p style="font-size: 13px; color: #888; margin-top: 5px;">Apaga absolutamente tudo e retorna o sistema ao estado original.</p>
+        
+        <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-lobby">
@@ -157,7 +177,7 @@
 
         function expulsar(nomeJogador) {
             if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
-                socket.emit('expulsar_jogador', { codigo: codigo_atual, name: nomeJogador });
+                socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
             }
         }
 
@@ -274,6 +294,35 @@
             document.getElementById('painel-coroacao').classList.add('escondido');
             document.getElementById('painel-inicio').classList.remove('escondido');
         }
+
+        // Funções do Painel de Banco de Dados
+        function abrirPainelBanco() {
+            document.getElementById('painel-inicio').classList.add('escondido');
+            document.getElementById('painel-banco').classList.remove('escondido');
+        }
+        
+        function fecharPainelBanco() {
+            document.getElementById('painel-banco').classList.add('escondido');
+            document.getElementById('painel-inicio').classList.remove('escondido');
+        }
+
+        function resetarBanco(tipo) {
+            let msg = "";
+            if (tipo === 'palavras') msg = "Isso fará com que palavras já jogadas possam se repetir no futuro. Confirmar exclusão do histórico?";
+            if (tipo === 'partidas') msg = "Isso vai APAGAR DEFINITIVAMENTE todos os placares, coroações e histórico de jogadores. Tem certeza?";
+            if (tipo === 'tudo') msg = "AVISO CRÍTICO: ISSO APAGARÁ ABSOLUTAMENTE TUDO DO BANCO DE DADOS. Tem certeza absoluta?";
+            
+            if(confirm(msg)) {
+                socket.emit('resetar_banco', { tipo: tipo });
+            }
+        }
+
+        socket.on('alerta_host', (dados) => {
+            alert(dados.mensagem);
+            if(dados.mensagem.includes("sucesso")) {
+                fecharPainelBanco();
+            }
+        });
     </script>
 </body>
 </html>
