@@ -68,18 +68,35 @@
         let meu_nome_atual = "";
         let codigo_atual = "";
 
+        window.onload = () => {
+            const nomeSalvo = localStorage.getItem('leoposter_nome');
+            const codigoSalvo = localStorage.getItem('leoposter_codigo');
+            if (nomeSalvo && codigoSalvo) {
+                document.getElementById('ipt-nome').value = nomeSalvo;
+                document.getElementById('ipt-codigo').value = codigoSalvo;
+                entrar();
+            }
+        };
+
         function entrar() {
             meu_nome_atual = document.getElementById('ipt-nome').value.trim();
             codigo_atual = document.getElementById('ipt-codigo').value.trim().toUpperCase();
             
             if(meu_nome_atual && codigo_atual) {
+                localStorage.setItem('leoposter_nome', meu_nome_atual);
+                localStorage.setItem('leoposter_codigo', codigo_atual);
                 socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual });
             }
         }
 
-        socket.on('erro_conexao', (dados) => { alert(dados.mensagem); });
+        socket.on('erro_conexao', (dados) => {
+            alert(dados.mensagem);
+            localStorage.removeItem('leoposter_nome');
+            localStorage.removeItem('leoposter_codigo');
+        });
 
         socket.on('foi_expulso', () => {
+            localStorage.clear();
             alert("Você foi removido da sala pelo Host principal.");
             location.reload();
         });
@@ -95,6 +112,11 @@
             document.getElementById('tela-escondida').classList.add('escondido');
             document.getElementById('tela-votacao').classList.add('escondido');
             
+            if (dados.ja_confirmou) {
+                document.getElementById('tela-escondida').classList.remove('escondido');
+                return;
+            }
+
             const telaJogo = document.getElementById('tela-jogo');
             telaJogo.classList.remove('escondido');
             document.getElementById('tema-display').innerText = dados.tema;
@@ -127,6 +149,7 @@
         function esconderTela() {
             document.getElementById('tela-jogo').classList.add('escondido');
             document.getElementById('tela-escondida').classList.remove('escondido');
+            socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meu_nome_atual });
         }
 
         socket.on('ir_para_tela_votacao', (dados) => {
@@ -137,6 +160,13 @@
 
             const divBotoes = document.getElementById('botoes-votacao');
             divBotoes.innerHTML = '';
+
+            if (dados.ja_votou) {
+                document.getElementById('tela-votacao').classList.add('escondido');
+                document.getElementById('tela-espera').classList.remove('escondido');
+                document.getElementById('tela-espera').innerHTML = "<h3>Voto Já Registrado!</h3><p style='color:#aaa;'>Aguarde a apuração na tela principal...</p>";
+                return;
+            }
 
             dados.jogadores.forEach(j => {
                 if(j.nome !== meu_nome_atual) {
@@ -158,8 +188,20 @@
         }
 
         socket.on('votacao_encerrada_celular', () => {
+            document.getElementById('tela-votacao').classList.add('escondido');
+            document.getElementById('tela-escondida').classList.add('escondido');
             document.getElementById('tela-espera').classList.remove('escondido');
             document.getElementById('tela-espera').innerHTML = "<h3>Rodada Encerrada</h3><p style='color:#aaa;'>Confira os resultados na tela principal.</p>";
+        });
+
+        socket.on('retorno_lobby_celular', () => {
+            document.getElementById('tela-espera').classList.remove('escondido');
+            document.getElementById('tela-espera').innerHTML = `
+                <h2 style="margin-top: 5px;">De volta ao Lobby!</h2>
+                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: ${meu_nome_atual}</p>
+                <div class="spinner"></div>
+                <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a próxima partida...</p>
+            `;
         });
     </script>
 </body>
