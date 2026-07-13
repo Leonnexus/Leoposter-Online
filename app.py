@@ -1,5 +1,4 @@
 # ==========================================
-# OBRIGATÓRIO: ESTE DEVE SER O PRIMEIRO COMANDO DO APP.PY
 import eventlet
 eventlet.monkey_patch()
 # ==========================================
@@ -12,7 +11,7 @@ from datetime import datetime
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, join_room, emit
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from banco_palavras import BANCO_PALAVRAS
 
@@ -186,6 +185,32 @@ def solicitar_coroacao(dados):
     tipo = dados.get('tipo')
     ranking = obter_ranking_dinamico(tipo)
     emit('receber_coroacao', {'tipo': tipo, 'ranking': ranking}, to=request.sid)
+
+@socketio.on('resetar_banco')
+def resetar_banco(dados):
+    tipo = dados.get('tipo')
+    try:
+        with engine.begin() as conn:
+            if tipo in ['palavras', 'tudo']:
+                conn.execute(text('DROP TABLE IF EXISTS "Palavras_Usadas"'))
+                for sala in salas_ativas.values():
+                    sala['palavras_usadas'] = set()
+            
+            if tipo in ['partidas', 'tudo']:
+                tabelas = ["Rodadas", "Resumo", "Analytics", "Historico_Impostores", "Estado_Eventos"]
+                for t in tabelas:
+                    conn.execute(text(f'DROP TABLE IF EXISTS "{t}"'))
+                for sala in salas_ativas.values():
+                    sala['historico_impostores'] = {}
+                    sala['acumulado_caos'] = 10
+                    sala['acumulado_trapaca'] = 20
+                    sala['placar'] = {}
+                    sala['impostores_ultima_rodada'] = []
+                    
+        emit('alerta_host', {'mensagem': 'Operação concluída com sucesso! Banco de dados atualizado.'}, to=request.sid)
+    except Exception as e:
+        print("Erro ao resetar banco:", e)
+        emit('alerta_host', {'mensagem': f'Erro ao processar o reset: {str(e)}'}, to=request.sid)
 
 @socketio.on('entrar_na_sala')
 def entrar_na_sala(dados):
