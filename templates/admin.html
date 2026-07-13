@@ -96,14 +96,16 @@
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
         <h2 style="color: #f1c40f;">Quem inicia o debate: <br><span id="primeiro-falar" style="font-size: 40px;">---</span></h2>
-        <p style="font-size: 18px; color: #aaa;">Debatam as pistas. Quando todos concluírem suas declarações, abra a votação.</p>
-        <button onclick="irParaVotacao()" style="background-color: #9b59b6;">Abrir Votação nos Dispositivos</button>
+        <p style="font-size: 18px; color: #aaa;">Debatam as pistas enquanto todos memorizam seus papéis nos celulares.</p>
+        
+        <p style="font-size: 20px; font-weight: bold; color: #3498db;">Jogadores Prontos: <span id="leitura-contagem">0</span> / <span id="leitura-total">0</span></p>
+        <button id="btn-abrir-votacao" disabled onclick="irParaVotacao()" style="background-color: #9b59b6; opacity: 0.3; cursor: not-allowed;">Aguardando Todos os Jogadores Lerem o Papel...</button>
     </div>
 
     <div class="container escondido" id="painel-votacao">
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
-        <button onclick="encerrarVotacao()" style="background-color: #e74c3c;">Encerrar Votação e Computar Resultados</button>
+        <button id="btn-encerrar-votacao" disabled onclick="encerrarVotacao()" style="background-color: #e74c3c; opacity: 0.3; cursor: not-allowed;">Aguardando Todos os Votos serem Computados...</button>
     </div>
 
     <div class="container escondido" id="painel-suspense" style="padding: 100px 20px;">
@@ -195,6 +197,28 @@
             document.getElementById('painel-lobby').classList.add('escondido');
             document.getElementById('painel-jogo').classList.remove('escondido');
             document.getElementById('primeiro-falar').innerText = dados.primeiro;
+            
+            const btn = document.getElementById('btn-abrir-votacao');
+            btn.disabled = true;
+            btn.style.opacity = "0.3";
+            btn.style.cursor = "not-allowed";
+            btn.innerText = "Aguardando Todos os Jogadores Lerem o Papel...";
+            
+            document.getElementById('leitura-contagem').innerText = "0";
+            document.getElementById('leitura-total').innerText = dados.total_jogadores;
+        });
+
+        socket.on('progresso_leitura_host', (dados) => {
+            document.getElementById('leitura-contagem').innerText = dados.prontos;
+            document.getElementById('leitura-total').innerText = dados.total;
+        });
+
+        socket.on('liberar_botao_votacao_host', () => {
+            const btn = document.getElementById('btn-abrir-votacao');
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+            btn.innerText = "Abrir Votação nos Dispositivos";
         });
 
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
@@ -203,14 +227,26 @@
             document.getElementById('painel-jogo').classList.add('escondido');
             document.getElementById('painel-votacao').classList.remove('escondido');
             document.getElementById('votos-contagem').innerText = "0";
-            if(dados && dados.total_jogadores) {
-                document.getElementById('votos-total').innerText = dados.total_jogadores;
-            }
+            if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
+
+            const btn = document.getElementById('btn-encerrar-votacao');
+            btn.disabled = true;
+            btn.style.opacity = "0.3";
+            btn.style.cursor = "not-allowed";
+            btn.innerText = "Aguardando Todos os Votos serem Computados...";
         });
 
         socket.on('voto_recebido_host', (dados) => {
             document.getElementById('votos-contagem').innerText = dados.total_votos;
             document.getElementById('votos-total').innerText = dados.total_jogadores;
+        });
+
+        socket.on('liberar_botao_encerrar_host', () => {
+            const btn = document.getElementById('btn-encerrar-votacao');
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+            btn.innerText = "Encerrar Votação e Computar Resultados";
         });
 
         function encerrarVotacao() { socket.emit('encerrar_votacao', { codigo: codigo_atual }); }
@@ -266,6 +302,7 @@
         }
 
         function voltarAoLobby() {
+            socket.emit('voltar_para_lobby', { codigo: codigo_atual });
             document.getElementById('painel-resultado').classList.add('escondido');
             document.getElementById('painel-lobby').classList.remove('escondido');
         }
@@ -295,7 +332,6 @@
             document.getElementById('painel-inicio').classList.remove('escondido');
         }
 
-        // Funções do Painel de Banco de Dados
         function abrirPainelBanco() {
             document.getElementById('painel-inicio').classList.add('escondido');
             document.getElementById('painel-banco').classList.remove('escondido');
