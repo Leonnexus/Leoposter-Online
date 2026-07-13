@@ -1,25 +1,47 @@
 BANCO_PALAVRAS = {
-    "Desenhos Famosos": [
-        ("Bob Esponja", "Fenda"), ("Os Simpsons", "Amarelo"), ("Pica-Pau", "Risada"), ("Tom e Jerry", "Perseguição"), ("Scooby-Doo", "Biscoito"),
-        ("Dragon Ball Z", "Esferas"), ("Naruto", "Vila"), ("Pokémon", "Captura"), ("Os Flintstones", "Pedra"), ("Os Jetsons", "Futuro"),
-        ("Pernalonga", "Cenoura"), ("Patolino", "Bico"), ("Homem-Aranha", "Teia"), ("As Meninas Superpoderosas", "Açúcar"), ("O Laboratório de Dexter", "Gênio"),
-        ("Coragem, o Cão Covarde", "Susto"), ("Du, Dudu e Edu", "Bala"), ("Peppa Pig", "Lama"), ("Hora de Aventura", "Herói"), ("Apenas um Show", "Parque"),
-        ("O Incrível Mundo de Gumball", "Gato"), ("Steven Universo", "Joia"), ("Os Jovens Titãs", "Torre"), ("Ben 10", "Relógio"), ("Phineas e Ferb", "Férias"),
-        ("Gravity Falls", "Diário"), ("Rick and Morty", "Portal"), ("South Park", "Gorro"), ("Caverna do Dragão", "Mestre"), ("He-Man", "Espada"),
-        ("Cavaleiros do Zodíaco", "Cosmo"), ("Avatar: A Lenda de Aang", "Elemento"), ("Os Padrinhos Mágicos", "Desejo"), ("Jimmy Neutron", "Cérebro"), ("Hey Arnold!", "Cabeça"),
-        ("A Pantera Cor-de-Rosa", "Inspeção"), ("Popeye", "Espinafre"), ("Garfield", "Lasanha"), ("Snoopy", "Casinha"), ("Tartarugas Ninja", "Esgoto"),
-        ("Três Espiãs Demais", "Agência"), ("Clube das Winx", "Fada"), ("Irmão do Jorel", "Abacate"), ("Turma da Mônica", "Coelhadas"), ("Miraculous", "Joaninha")
+    "Comidas": [
+        ("Pizza", "Fatia"), ("Hambúrguer", "Pão"), ("Sushi", "Alga"), ("Lasanha", "Travessa"), ("Churrasco", "Brasa"),
+        ("Tacos", "Crosta"), ("Cachorro Quente", "Salsicha"), ("Batata Frita", "Óleo"), ("Salada", "Folha"), ("Sopa", "Caldo"),
+        ("Macarrão", "Fio"), ("Arroz", "Grão"), ("Feijão", "Caldo"), ("Bife", "Chapa"), ("Frango Assado", "Espeto"),
+        ("Peixe Frito", "Espinha"), ("Camarão", "Casca"), ("Lagosta", "Antena"), ("Omelete", "Ovo"), ("Ovo Frito", "Gema"),
+        ("Pão", "Miolo"), ("Queijo", "Cura"), ("Presunto", "Fatia"), ("Salame", "Fio"), ("Mortadela", "Borda"),
+        ("Manteiga", "Derretida"), ("Requeijão", "Copo"), ("Iogurte", "Fundo"), ("Leite", "Caixa"), ("Cereal", "Tigela"),
+        ("Bolo", "Cobertura"), ("Torta", "Massa"), ("Sorvete", "Cone"), ("Chocolate", "Cacau"), ("Pudim", "Calda"),
+        ("Gelatina", "Tremor"), ("Brigadeiro", "Granulado"), ("Beijinho", "Cravo"), ("Quindim", "Gema"), ("Churros", "Doce"),
+        ("Maçã", "Pecado"), ("Banana", "Cacho"), ("Laranja", "Bagaço"), ("Uva", "Vinho"), ("Morango", "Semente"),
+        ("Melancia", "Casca"), ("Abacaxi", "Coroa"), ("Melão", "Rede"), ("Mamão", "Semente"), ("Pera", "Curva"),
+        ("Manga", "Fiapo"), ("Limão", "Azedo"), ("Pêssego", "Caroço"), ("Cereja", "Cabo"), ("Goiaba", "Miolo"),
+        ("Maracujá", "Calma"), ("Kiwi", "Pelo"), ("Coco", "Água"), ("Abacate", "Vitamina"), ("Figo", "Árvore"),
+        ("Tomate", "Molho"), ("Alface", "Salada"), ("Cebola", "Choro"), ("Alho", "Dente"), ("Cenoura", "Visão"),
+        ("Batata", "Terra"), ("Brócolis", "Árvore"), ("Couve", "Refogado"), ("Espinafre", "Força"), ("Pimentão", "Oco"),
+        ("Pepino", "Picles"), ("Abobrinha", "Refogado"), ("Berinjela", "Roxo"), ("Milho", "Sabugo"), ("Ervilha", "Vagem"),
+        ("Feijão Verde", "Vagem"), ("Lentilha", "Ano"), ("Grão de Bico", "Pasta"), ("Soja", "Proteína"), ("Amendoim", "Casca"),
+        ("Nozes", "Quebra"), ("Castanha", "Ouriço"), ("Amêndoa", "Pele"), ("Pistache", "Verde"), ("Avelã", "Creme"),
+        ("Pimenta", "Ardor"), ("Sal", "Mar"), ("Açúcar", "Cana"), ("Azeite", "Oliva"), ("Vinagre", "Ácido"),
+        ("Mostarda", "Amarelo"), ("Ketchup", "Tomate"), ("Maionese", "Ovo"), ("Molho Shoyu", "Sódio"), ("Pimenta do Reino", "Pó"),
+        ("Orégano", "Pizza"), ("Manjericão", "Pesto"), ("Salsa", "Tempero"), ("Cebolinha", "Verde"), ("Coentro", "Tempero")
     ],
-    "Personagens": [
-        ("Patrick Estrela", "Pedra"), ("Lula Molusco", "Clarinete"), ("Seu Siriguejo", "Dinheiro"), ("Homer Simpson", "Rosquinha"), ("Bart Simpson", "Skate"), 
-        ("Mickey Mouse", "Orelhas"), ("Pato Donald", "Marinheiro"), ("Tio Patinhas", "Moedas"), ("Gaguinho", "Gagueira"), ("Piu-Piu", "Gaiola"),
-        ("Frajola", "Passarinho"), ("Papa-Léguas", "Velocidade"), ("Taz", "Redemoinho"), ("Zeca Urubu", "Malandro"), ("Salsicha", "Medo"), 
-        ("Fred Flintstone", "Pedreira"), ("Astro", "Cão do futuro"), ("Zé Colmeia", "Cesta"), ("Manda-Chuva", "Beco"), ("Dick Vigarista", "Trapaça"), 
-        ("Mutley", "Risadinha"), ("Johnny Bravo", "Espelho"), ("Florzinha", "Líder"), ("Macaco Louco", "Cérebro"), ("Finn", "Humano"), 
-        ("Jake", "Estica"), ("Gumball", "Gato azul"), ("Cebolinha", "Plano infalível"), ("Cascão", "Sujeira"), ("Magali", "Melancia"), 
-        ("Goku", "Nuvem voadora"), ("Vegeta", "Príncipe"), ("Sasuke", "Vingança"), ("Ash Ketchum", "Boné"), ("Pikachu", "Raio"), 
-        ("Batman", "Morcego"), ("Superman", "Capa vermelha"), ("Mutano", "Verde"), ("Ravena", "Sombria"), ("Ciborgue", "Booyah"), 
-        ("Brutus", "Barba"), ("Esqueleto", "Crânio"), ("Inspetor Bugiganga", "Molas"), ("Mestre dos Magos", "Charada"), ("Stitch", "Experiência")
+    "Animais": [
+        ("Cachorro", "Osso"), ("Gato", "Caixa"), ("Rato", "Porão"), ("Leão", "Juba"), ("Tigre", "Listra"),
+        ("Urso", "Mel"), ("Lobo", "Uivo"), ("Raposa", "Astúcia"), ("Elefante", "Marfim"), ("Girafa", "Altura"),
+        ("Zebra", "Listra"), ("Hipopótamo", "Boca"), ("Rinoceronte", "Chifre"), ("Macaco", "Galho"), ("Gorila", "Peito"),
+        ("Chimpanzé", "Ferramenta"), ("Canguru", "Salto"), ("Coala", "Eucalipto"), ("Panda", "Bambu"), ("Camelo", "Deserto"),
+        ("Cavalo", "Sela"), ("Vaca", "Leite"), ("Porco", "Lama"), ("Ovelha", "Lã"), ("Cabra", "Montanha"),
+        ("Burro", "Carga"), ("Touro", "Arena"), ("Búfalo", "Manada"), ("Alce", "Galhada"), ("Rena", "Neve"),
+        ("Galinha", "Grama"), ("Pato", "Lago"), ("Ganso", "Ataque"), ("Peru", "Festa"), ("Pombo", "Praça"),
+        ("Corvo", "Agouro"), ("Águia", "Visão"), ("Falcão", "Velocidade"), ("Coruja", "Noite"), ("Papagaio", "Voz"),
+        ("Arara", "Cor"), ("Tucano", "Bico"), ("Pinguim", "Gelo"), ("Avestruz", "Velocidade"), ("Pavão", "Elegância"),
+        ("Cisne", "Beleza"), ("Gaivota", "Praia"), ("Pelicano", "Bolsa"), ("Cegonha", "Pacote"), ("Flamingo", "Rosa"),
+        ("Sapo", "Brejo"), ("Rã", "Pulo"), ("Perereca", "Árvore"), ("Crocodilo", "Rio"), ("Jacaré", "Pântano"),
+        ("Tartaruga", "Casco"), ("Jabuti", "Lentidão"), ("Cobra", "Veneno"), ("Lagarto", "Sol"), ("Iguana", "Crista"),
+        ("Camaleão", "Disfarce"), ("Dragão de Komodo", "Bactéria"), ("Tubarão", "Focinho"), ("Baleia", "Esguicho"), ("Golfinho", "Aro"),
+        ("Foca", "Bola"), ("Leão Marinho", "Orelha"), ("Morsa", "Presa"), ("Peixe", "Escama"), ("Salmão", "Corrente"),
+        ("Atum", "Lata"), ("Bacalhau", "Sal"), ("Sardinha", "Lata"), ("Carpa", "Lago"), ("Truta", "Rio"),
+        ("Peixe Palhaço", "Anêmona"), ("Cavalo Marinho", "Cauda"), ("Polvo", "Tinta"), ("Lula", "Anel"), ("Água Viva", "Queimadura"),
+        ("Estrela do Mar", "Ponta"), ("Caranguejo", "Lado"), ("Lagosta", "Antena"), ("Camarão", "Fritura"), ("Ostra", "Pérola"),
+        ("Marisco", "Concha"), ("Caracol", "Rastro"), ("Lesma", "Sal"), ("Minhoca", "Terra"), ("Sanguessuga", "Sangue"),
+        ("Aranha", "Teia"), ("Escorpião", "Ferrão"), ("Formiga", "Folha"), ("Abelha", "Mel"), ("Vespa", "Ataque"),
+        ("Mosca", "Lixo"), ("Mosquito", "Doença"), ("Borboleta", "Flor"), ("Mariposa", "Luz"), ("Besouro", "Chifre")
     ],
     "Filmes de Sucesso": [
         ("Titanic", "Água"), ("Matrix", "Pílula"), ("Jurassic Park", "Parque"), ("Avatar", "Natureza"), ("Os Vingadores", "Equipe"), 
@@ -57,7 +79,40 @@ BANCO_PALAVRAS = {
         ("Segurança", "Vigia"), ("Porteiro", "Porta"), ("Zelador", "Prédio"), ("Agricultor", "Terra"), ("Fazendeiro", "Planta"), 
         ("Pescador", "Rede"), ("Marinheiro", "Navio"), ("Militar", "Farda"), ("Bancário", "Dinheiro"), ("Contador", "Planilha")
     ],
-    "Comidas": [
+    "Personagens": [
+        ("Patrick Estrela", "Pedra"), ("Lula Molusco", "Clarinete"), ("Seu Siriguejo", "Dinheiro"), ("Homer Simpson", "Rosquinha"), ("Bart Simpson", "Skate"), 
+        ("Mickey Mouse", "Orelhas"), ("Pato Donald", "Marinheiro"), ("Tio Patinhas", "Moedas"), ("Gaguinho", "Gagueira"), ("Piu-Piu", "Gaiola"),
+        ("Frajola", "Passarinho"), ("Papa-Léguas", "Velocidade"), ("Taz", "Redemoinho"), ("Zeca Urubu", "Malandro"), ("Salsicha", "Medo"), 
+        ("Fred Flintstone", "Pedreira"), ("Astro", "Cão do futuro"), ("Zé Colmeia", "Cesta"), ("Manda-Chuva", "Beco"), ("Dick Vigarista", "Trapaça"), 
+        ("Mutley", "Risadinha"), ("Johnny Bravo", "Espelho"), ("Florzinha", "Líder"), ("Macaco Louco", "Cérebro"), ("Finn", "Humano"), 
+        ("Jake", "Estica"), ("Gumball", "Gato azul"), ("Cebolinha", "Plano infalível"), ("Cascão", "Sujeira"), ("Magali", "Melancia"), 
+        ("Goku", "Nuvem voadora"), ("Vegeta", "Príncipe"), ("Sasuke", "Vingança"), ("Ash Ketchum", "Boné"), ("Pikachu", "Raio"), 
+        ("Batman", "Morcego"), ("Superman", "Capa vermelha"), ("Mutano", "Verde"), ("Ravena", "Sombria"), ("Ciborgue", "Booyah"), 
+        ("Brutus", "Barba"), ("Esqueleto", "Crânio"), ("Inspetor Bugiganga", "Molas"), ("Mestre dos Magos", "Charada"), ("Stitch", "Experiência")
+    ],
+    "Desenhos Famosos": [
+        ("Bob Esponja", "Fenda"), ("Os Simpsons", "Amarelo"), ("Pica-Pau", "Risada"), ("Tom e Jerry", "Perseguição"), ("Scooby-Doo", "Biscoito"),
+        ("Dragon Ball Z", "Esferas"), ("Naruto", "Vila"), ("Pokémon", "Captura"), ("Os Flintstones", "Pedra"), ("Os Jetsons", "Futuro"),
+        ("Pernalonga", "Cenoura"), ("Patolino", "Bico"), ("Batman: A Série Animada", "Morcego"), ("Homem-Aranha", "Teia"), ("X-Men", "Mutantes"),
+        ("As Meninas Superpoderosas", "Açúcar"), ("O Laboratório de Dexter", "Gênio"), ("Johnny Bravo", "Topete"), ("Coragem, o Cão Covarde", "Susto"), ("Du, Dudu e Edu", "Bala"),
+        ("A Vaca e o Frango", "Bípede"), ("Patrulha Canina", "Resgate"), ("Peppa Pig", "Lama"), ("Hora de Aventura", "Herói"), ("Apenas um Show", "Parque"),
+        ("O Incrível Mundo de Gumball", "Gato"), ("Steven Universo", "Joia"), ("Os Jovens Titãs", "Torre"), ("Ben 10", "Relógio"), ("Phineas e Ferb", "Férias"),
+        ("Gravity Falls", "Diário"), ("Rick and Morty", "Portal"), ("Futurama", "Entrega"), ("South Park", "Gorro"), ("Uma Família da Pesada", "Sofá"),
+        ("Caverna do Dragão", "Mestre"), ("He-Man", "Espada"), ("ThunderCats", "Olho"), ("Cavaleiros do Zodíaco", "Cosmo"), ("Yu-Gi-Oh!", "Duelo"),
+        ("Digimon", "Digital"), ("Sailor Moon", "Prisma"), ("Avatar: A Lenda de Aang", "Elemento"), ("A Lenda de Korra", "Equilíbrio"), ("Os Padrinhos Mágicos", "Desejo"),
+        ("Jimmy Neutron", "Cérebro"), ("Hey Arnold!", "Cabeça"), ("Doug", "Costelinha"), ("Rugrats: Os Anjinhos", "Fralda"), ("CatDog", "Gêmeos"),
+        ("Dora, a Aventureira", "Mochila"), ("Ursinhos Carinhosos", "Nuvem"), ("Smurfs", "Azul"), ("Inspetor Bugiganga", "Casaco"), ("A Pantera Cor-de-Rosa", "Inspeção"),
+        ("Popeye", "Espinafre"), ("Garfield", "Lasanha"), ("Snoopy", "Casinha"), ("Zé Colmeia", "Piquenique"), ("Corrida Maluca", "Trapaça"),
+        ("Animaniacs", "Torre"), ("Pinky e o Cérebro", "Mundo"), ("Tiny Toon", "Universidade"), ("O Máskara", "Verde"), ("Super Choque", "Eletricidade"),
+        ("Liga da Justiça", "Satélite"), ("Tartarugas Ninja", "Esgoto"), ("Três Espiãs Demais", "Agência"), ("Clube das Winx", "Fada"), ("Kim Possible", "Agente"),
+        ("Lilo & Stitch", "Experiência"), ("DuckTales", "Cofre"), ("Tico e Teco", "Esquilos"), ("Capitão Planeta", "Anel"), ("A Vida Moderna de Rocko", "Austrália"),
+        ("Os Castores Zangados", "Represa"), ("Invasor Zim", "Alienígena"), ("Mansão Foster para Amigos Imaginários", "Amigo"), ("KND: A Turma do Bairro", "Árvore"), ("Billy e Mandy", "Foice"),
+        ("Samurai Jack", "Passado"), ("Titio Avô", "Pochete"), ("Ursos Sem Curso", "Pilha"), ("My Little Pony", "Amizade"), ("Star contra as Forças do Mal", "Varinha"),
+        ("A Casa Coruja", "Bruxa"), ("As Aventuras de Jackie Chan", "Talismã"), ("X-Men: Evolution", "Instituto"), ("Justiça Jovem", "Equipe"), ("Os Pinguins de Madagascar", "Tática"),
+        ("O Fantástico Mundo de Bobby", "Triciclo"), ("Manda-Chuva", "Beco"), ("Dick Vigarista e Mutley", "Medalha"), ("Capitão Caverna", "Clava"), ("O Show da Luna", "Ciência"),
+        ("Irmão do Jorel", "Abacate"), ("Turma da Mônica", "Coelhadas"), ("Caillou", "Careca"), ("Transformers", "Disfarce"), ("Miraculous Ladybug", "Joaninha")
+    ],
+    "Comidas pt.2": [
         ("Hambúrguer", "Pão"), ("Sushi", "Cru"), ("Pizza", "Forno"), ("Lasanha", "Queijo"), ("Feijoada", "Preto"),
         ("Churrasco", "Fogo"), ("Sorvete", "Gelado"), ("Pudim", "Forma"), ("Macarronada", "Massa"), ("Pipoca", "Milho"),
         ("Bolo", "Festa"), ("Coxinha", "Frito"), ("Pastel", "Feira"), ("Tapioca", "Branco"), ("Açaí", "Roxo"),
@@ -69,7 +124,7 @@ BANCO_PALAVRAS = {
         ("Pamonha", "Palha"), ("Canjica", "Doce"), ("Curau", "Canela"), ("Goiabada", "Goiaba"), ("Mousse", "Aerado"),
         ("Yakisoba", "Ásia"), ("Taco", "Casca"), ("Burrito", "Enrolado"), ("Nachos", "Triângulo"), ("Sopa", "Caldo")
     ],
-    "Animais": [
+    "Animais pt.2": [
         ("Cachorro", "Coleira"), ("Gato", "Caixa"), ("Leão", "Juba"), ("Tigre", "Listras"), ("Elefante", "Tromba"),
         ("Girafa", "Pescoço"), ("Urso", "Caverna"), ("Lobo", "Uivo"), ("Porco", "Lama"), ("Vaca", "Pasto"),
         ("Cavalo", "Sela"), ("Galinha", "Penas"), ("Pato", "Lago"), ("Cobra", "Escamas"), ("Jacaré", "Réptil"),
@@ -80,5 +135,8 @@ BANCO_PALAVRAS = {
         ("Minhoca", "Terra"), ("Ovelha", "Lã"), ("Raposa", "Astúcia"), ("Rinoceronte", "Chifre"), ("Hipopótamo", "Pesado"),
         ("Zebra", "África"), ("Canguru", "Bolsa"), ("Coala", "Eucalipto"), ("Panda", "Bambu"), ("Gorila", "Forte"),
         ("Coruja", "Visão"), ("Águia", "Garras"), ("Pinguim", "Gelo"), ("Avestruz", "Corre"), ("Camelo", "Deserto")
-    ]
+        ],
+    #"Teste": [
+        #("palavra", "dica vaga")
+        #]
 }
