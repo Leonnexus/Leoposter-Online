@@ -27,7 +27,6 @@
         .timer-controle { display: flex; align-items: center; justify-content: space-between; background: #121212; border-radius: 6px; border: 1px solid #444; padding: 2px;}
         .timer-btn { width: 40px; margin: 0; padding: 8px; background: #34495e; }
         
-        /* Estilos do Timer Ampulheta */
         #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
         #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
 
@@ -59,11 +58,11 @@
 
     <div class="container escondido" id="painel-banco">
         <h1 style="color: #e74c3c; font-size: 30px;">⚙️ ADMINISTRAÇÃO DE DADOS</h1>
-        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis.</p>
+        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis e afetam o banco de dados principal.</p>
         
         <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras Usadas</button>
         <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Histórico de Partidas e Ranking</button>
-        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL</button>
+        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL (Factory Reset)</button>
         
         <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
     </div>
@@ -129,6 +128,11 @@
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
         <p style="color: #aaa; font-style: italic;">Aguardando todos os celulares submeterem seus vereditos...</p>
+    </div>
+
+    <div class="container escondido" id="painel-suspense" style="padding: 100px 20px;">
+        <h2 style="font-size: 35px; color: #aaa; margin: 0;">Revelando o veredito em...</h2>
+        <div id="contagem-regressiva" style="font-size: 150px; font-weight: bold; color: #f1c40f; margin: 0;">3</div>
     </div>
 
     <div class="container escondido" id="painel-resultado">
@@ -303,6 +307,24 @@
 
         socket.on('resultado_votacao_host', (dados) => {
             document.getElementById('painel-votacao').classList.add('escondido');
+            document.getElementById('painel-suspense').classList.remove('escondido');
+            
+            let count = 3;
+            document.getElementById('contagem-regressiva').innerText = count;
+            
+            let interval = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    document.getElementById('contagem-regressiva').innerText = count;
+                } else {
+                    clearInterval(interval);
+                    document.getElementById('painel-suspense').classList.add('escondido');
+                    mostrarResultadoFinal(dados);
+                }
+            }, 1000);
+        });
+
+        function mostrarResultadoFinal(dados) {
             document.getElementById('painel-resultado').classList.remove('escondido');
             
             const titulo = document.getElementById('titulo-revelacao');
@@ -345,7 +367,7 @@
             for (const [nome, pts] of Object.entries(dados.pontos)) {
                 ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`;
             }
-        });
+        }
 
         function voltarAoLobby() {
             socket.emit('voltar_para_lobby', { codigo: codigo_atual });
@@ -353,13 +375,28 @@
             document.getElementById('painel-lobby').classList.remove('escondido');
         }
 
-        // Funções de Coroação e Banco (Sem Alteração)
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
-        socket.on('receber_coroacao', (dados) => { /*...*/ });
-        function fecharCoroacao() { /*...*/ }
+        socket.on('receber_coroacao', (dados) => {
+            document.getElementById('painel-inicio').classList.add('escondido');
+            const painel = document.getElementById('painel-coroacao');
+            painel.classList.remove('escondido');
+            document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
+            const div = document.getElementById('coroacao-conteudo');
+            div.innerHTML = '';
+            if(dados.ranking.length === 0) {
+                div.innerHTML = "<p>Nenhum dado registrado para este período.</p>";
+                return;
+            }
+            dados.ranking.forEach((pos, idx) => {
+                let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
+                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
+            });
+        });
+
+        function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
         function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
-        function resetarBanco(tipo) { /*...*/ if(confirm("...")) socket.emit('resetar_banco', {tipo: tipo}); }
+        function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
         socket.on('alerta_host', (dados) => { alert(dados.mensagem); if(dados.mensagem.includes("sucesso")) fecharPainelBanco(); });
     </script>
 </body>
