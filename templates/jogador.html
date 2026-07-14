@@ -24,8 +24,49 @@
         .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
         .btn-ja-foi { background-color: #d35400; margin-top: 20px; font-size: 14px; }
         
-        .emoji-opt { font-size: 30px; cursor: pointer; padding: 5px; background: #222; border-radius: 8px; user-select: none;}
-        .emoji-opt:active { background: #555; }
+        /* CSS do Emoji Picker em Tempo Real */
+        .emoji-opt-container {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            font-size: 32px;
+            line-height: 48px;
+            text-align: center;
+            background: #222;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+        .emoji-opt-container:active { background: #555; }
+        .emoji-opt-container.ocupado {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #111;
+        }
+        .emoji-opt-container.selecionado {
+            background: #2980b9;
+            border: 2px solid #3498db;
+            box-sizing: border-box;
+            line-height: 44px; /* ajuste pela borda */
+        }
+        .nome-sobre-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff4757; /* Vermelho forte */
+            font-size: 11px;
+            font-weight: 900;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8);
+            pointer-events: none;
+            width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -41,12 +82,15 @@
     <div class="box escondido" id="tela-espera">
         <h2 style="margin-top: 5px;">Conectado!</h2>
         <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: <span id="meu-nome"></span></p>
+        
+        <div id="meu-emoji-display" style="font-size: 60px; margin: 10px 0;">👤</div>
+        
         <div class="spinner"></div>
         <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a partida...</p>
         
         <div id="bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;">
-            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Emoji:</p>
-            <div id="grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar:</p>
+            <div id="grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto; padding-bottom: 10px;"></div>
         </div>
     </div>
 
@@ -89,7 +133,9 @@
         let meu_nome_atual = "";
         let codigo_atual = "";
         
-        // Variáveis de controle de votação múltipla
+        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"];
+        let listaJogadoresCache = [];
+        
         let votos_selecionados = [];
         let max_votos_permitidos = 1;
 
@@ -132,39 +178,53 @@
             document.getElementById('meu-nome').innerText = dados.nome;
         });
 
-        // Carrega e atualiza a grade de emojis na tela de espera
-        socket.on('retorno_lobby_celular', (dados) => {
-            socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
-            document.getElementById('tela-espera').classList.remove('escondido');
-            document.getElementById('tela-espera').innerHTML = `
-                <h2 style="margin-top: 5px;">De volta ao Lobby!</h2>
-                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: ${meu_nome_atual}</p>
-                <div class="spinner"></div>
-                <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a próxima partida...</p>
-                <div id="bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;">
-                    <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Emoji:</p>
-                    <div id="grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
-                </div>
-            `;
-            if (dados && dados.emojis_disponiveis) atualizarGradeEmojis(dados.emojis_disponiveis);
+        // Este evento abastece a Grade Dinâmica de Emojis
+        socket.on('lista_jogadores_atualizada', (dados) => {
+            listaJogadoresCache = dados.jogadores;
+            renderizarGradeEmojis();
         });
 
-        socket.on('atualizar_lista_emojis', (dados) => {
-            atualizarGradeEmojis(dados.emojis_disponiveis);
-        });
-
-        function atualizarGradeEmojis(lista) {
+        function renderizarGradeEmojis() {
             const grade = document.getElementById('grade-emojis');
             if(!grade) return;
             grade.innerHTML = '';
-            lista.forEach(e => {
-                let span = document.createElement('span');
-                span.className = 'emoji-opt';
-                span.innerText = e;
-                span.onclick = () => { socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meu_nome_atual, emoji: e}); };
-                grade.appendChild(span);
+
+            const meuJogador = listaJogadoresCache.find(j => j.nome === meu_nome_atual);
+            if (meuJogador) {
+                document.getElementById('meu-emoji-display').innerText = meuJogador.emoji;
+            }
+
+            TODOS_EMOJIS.forEach(emoji => {
+                const container = document.createElement('div');
+                container.className = 'emoji-opt-container';
+
+                const dono = listaJogadoresCache.find(j => j.emoji === emoji);
+
+                if (dono) {
+                    if (dono.nome === meu_nome_atual) {
+                        container.classList.add('selecionado');
+                        container.innerText = emoji;
+                    } else {
+                        container.classList.add('ocupado');
+                        container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`;
+                    }
+                } else {
+                    container.innerText = emoji;
+                    container.onclick = () => {
+                        socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meu_nome_atual, emoji: emoji});
+                    };
+                }
+                grade.appendChild(container);
             });
         }
+
+        socket.on('retorno_lobby_celular', () => {
+            socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
+            document.getElementById('tela-espera').classList.remove('escondido');
+            
+            // Força o re-render com o cache atual, caso a UI tenha resetado
+            renderizarGradeEmojis();
+        });
 
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
@@ -243,13 +303,11 @@
                 return;
             }
 
-            // Reseta controles
             votos_selecionados = [];
             max_votos_permitidos = dados.qtd_votos || 1;
             document.getElementById('qtd-alvo').innerText = max_votos_permitidos;
             document.getElementById('btn-submeter-voto').disabled = true;
 
-            // Mostra aviso se o caos influenciou a quantidade
             if(dados.caos_geral) document.getElementById('aviso-caos-votacao').classList.remove('escondido');
             else document.getElementById('aviso-caos-votacao').classList.add('escondido');
 
@@ -269,18 +327,15 @@
 
         function alternarVoto(btn, nome) {
             if (votos_selecionados.includes(nome)) {
-                // Desmarca
                 votos_selecionados = votos_selecionados.filter(n => n !== nome);
                 btn.classList.remove('selecionado');
             } else {
-                // Tenta marcar
                 if (votos_selecionados.length < max_votos_permitidos) {
                     votos_selecionados.push(nome);
                     btn.classList.add('selecionado');
                 }
             }
             
-            // Só libera o envio se o array de votos tiver O TAMANHO EXATO de impostores na mesa
             const btnEnviar = document.getElementById('btn-submeter-voto');
             btnEnviar.disabled = (votos_selecionados.length !== max_votos_permitidos);
         }
