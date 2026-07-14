@@ -176,6 +176,7 @@ def criar_sala():
         'fila_interrogatorio': [],
         'fase_atual': 'lobby',
         'jogadores_prontos': set(),
+        'jogadores_ja_foi': set(),
         'impostores_atuais': [],
         'palavra_atual': '',
         'votos': {}
@@ -242,7 +243,8 @@ def entrar_na_sala(dados):
                 'tema': sala.get('tema_atual', 'Geral'),
                 'palavra_ou_dica': sala.get('dica_vaga' if eh_impostor else 'palavra_atual', ''),
                 'caos_ativo': sala.get('caos_ativo_atual', False) if eh_impostor else False,
-                'ja_confirmou': jogador_existente['nome'] in sala['jogadores_prontos']
+                'ja_confirmou': jogador_existente['nome'] in sala['jogadores_prontos'],
+                'ja_votou_ja_foi': jogador_existente['nome'] in sala.get('jogadores_ja_foi', set())
             }
             if eh_impostor and sala.get('trapaca_ativo_atual', False):
                 payload['equipe'] = [i for i in sala['impostores_atuais'] if i != jogador_existente['nome']]
@@ -287,6 +289,16 @@ def expulsar_jogador(dados):
             emit('foi_expulso', {}, to=jogador['sid'])
             lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
             emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
+            
+            # Recalcula prontos se for no meio da revelacao
+            if sala['fase_atual'] == 'revelacao':
+                sala['jogadores_prontos'].discard(nome_expulso)
+                sala['jogadores_ja_foi'].discard(nome_expulso)
+                total = len(sala['jogadores'])
+                prontos = len(sala['jogadores_prontos'])
+                emit('progresso_leitura_host', {'prontos': prontos, 'total': total}, to=sala['host_sid'])
+                if total > 0 and prontos >= total:
+                    emit('liberar_botao_votacao_host', {}, to=sala['host_sid'])
 
 @socketio.on('iniciar_partida')
 def iniciar_partida(dados):
@@ -296,15 +308,13 @@ def iniciar_partida(dados):
 
     sala['fase_atual'] = 'revelacao'
     sala['jogadores_prontos'] = set()
+    sala['jogadores_ja_foi'] = set()
     sala['votos'] = {}
 
     categoria = dados.get('categoria')
     imp_base = int(dados.get('imp_base', 1))
     prob_caos = int(dados.get('caos', 10))
     prob_trapaca = int(dados.get('trapaca', 20))
-
-    sala['acumulado_caos'] = max(sala['acumulado_caos'], prob_caos)
-    sala['acumulado_trapaca'] = max(sala['acumulado_trapaca'], prob_trapaca)
 
     if categoria == "Aleatório":
         categoria = random.choice(list(BANCO_PALAVRAS.keys()))
@@ -317,9 +327,12 @@ def iniciar_partida(dados):
     palavra_secreta, dica_vaga = random.choice(opcoes)
     sala['palavras_usadas'].add(palavra_secreta)
 
-    caos_ativo = random.random() < (sala['acumulado_caos'] / 100.0)
-    if caos_ativo: sala['acumulado_caos'] = prob_caos
-    else: sala['acumulado_caos'] = min(100, sala['acumulado_caos'] + prob_caos)
+    # Regra de Ouro: Caos não ativa se houver 3 ou menos jogadores
+    caos_ativo = False
+    if len(sala['jogadores']) > 3:
+        caos_ativo = random.random() < (sala['acumulado_caos'] / 100.0)
+        if caos_ativo: sala['acumulado_caos'] = prob_caos
+        else: sala['acumulado_caos'] = min(100, sala['acumulado_caos'] + prob_caos)
 
     qtd_impostores = min(len(sala['jogadores']) - 1, imp_base + (1 if caos_ativo else 0))
 
@@ -362,7 +375,8 @@ def iniciar_partida(dados):
             'papel': 'impostor' if eh_impostor else 'inocente',
             'tema': categoria,
             'caos_ativo': caos_ativo if eh_impostor else False,
-            'ja_confirmou': False
+            'ja_confirmou': False,
+            'ja_votou_ja_foi': False
         }
         if eh_impostor:
             payload['palavra_ou_dica'] = dica_vaga
@@ -373,6 +387,56 @@ def iniciar_partida(dados):
         emit('distribuir_papeis', payload, to=jogador['sid'])
 
     emit('partida_iniciada_host', {'primeiro': primeiro_nome_fmt, 'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
+
+@socketio.on('clicou_ja_foi')
+def clicou_ja_foi(dados):
+    codigo = dados.get('codigo')
+    nome = dados.get('nome')
+    sala = salas_ativas.get(codigo)
+    if not sala or sala['fase_atual'] != 'revelacao': return
+
+    if 'jogadores_ja_foi' not in sala:
+        sala['jogadores_ja_foi'] = set()
+    
+    sala['jogadores_ja_foi'].add(nome)
+
+    if len(sala['jogadores_ja_foi']) >= len(sala['jogadores']):
+        # Unanimidade atingida! Troca a palavra e reseta a etapa de leitura.
+        sala['jogadores_ja_foi'] = set()
+        sala['jogadores_prontos'] = set()
+
+        categoria = sala['tema_atual']
+        opcoes = [p for p in BANCO_PALAVRAS[categoria] if p[0] not in sala['palavras_usadas']]
+        if not opcoes:
+            opcoes = BANCO_PALAVRAS[categoria]
+            sala['palavras_usadas'].difference_update({p[0] for p in BANCO_PALAVRAS[categoria]})
+
+        nova_palavra, nova_dica = random.choice(opcoes)
+        sala['palavras_usadas'].add(nova_palavra)
+        sala['palavra_atual'] = nova_palavra
+        sala['dica_vaga'] = nova_dica
+
+        for jogador in sala['jogadores']:
+            eh_impostor = jogador['nome'] in sala['impostores_atuais']
+            payload = {
+                'papel': 'impostor' if eh_impostor else 'inocente',
+                'tema': categoria,
+                'caos_ativo': sala.get('caos_ativo_atual', False) if eh_impostor else False,
+                'ja_confirmou': False,
+                'ja_votou_ja_foi': False
+            }
+            if eh_impostor:
+                payload['palavra_ou_dica'] = nova_dica
+                if sala.get('trapaca_ativo_atual', False): 
+                    payload['equipe'] = [i for i in sala['impostores_atuais'] if i != jogador['nome']]
+            else:
+                payload['palavra_ou_dica'] = nova_palavra
+
+            emit('distribuir_papeis', payload, to=jogador['sid'])
+        
+        # Trava o Host novamente para todos lerem a nova palavra
+        emit('progresso_leitura_host', {'prontos': 0, 'total': len(sala['jogadores'])}, to=sala['host_sid'])
+        emit('travar_botao_votacao_host', {}, to=sala['host_sid'])
 
 @socketio.on('confirmar_leitura_papel')
 def confirmar_leitura_papel(dados):
