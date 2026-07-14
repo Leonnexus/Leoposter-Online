@@ -12,6 +12,7 @@
         input { background: #121212; color: white; text-align: center; text-transform: uppercase; border: 1px solid #444; }
         button { background-color: #3498db; color: white; cursor: pointer; transition: 0.2s; }
         button:hover { filter: brightness(1.1); }
+        button:disabled { background-color: #555 !important; cursor: not-allowed; opacity: 0.5; }
         .escondido { display: none !important; }
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -19,9 +20,12 @@
         .inocente { border-color: #2ecc71 !important; }
         .impostor { border-color: #e74c3c !important; }
         .palavra-gigante { font-size: 38px; font-weight: bold; margin: 15px 0; font-family: Impact, sans-serif; letter-spacing: 1px; }
-        .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; }
-        .voto-btn:active { background-color: #d35400; }
+        .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; transition: background 0.1s; }
+        .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
         .btn-ja-foi { background-color: #d35400; margin-top: 20px; font-size: 14px; }
+        
+        .emoji-opt { font-size: 30px; cursor: pointer; padding: 5px; background: #222; border-radius: 8px; user-select: none;}
+        .emoji-opt:active { background: #555; }
     </style>
 </head>
 <body>
@@ -35,10 +39,15 @@
     </div>
 
     <div class="box escondido" id="tela-espera">
-        <h2 style="margin-top: 5px;">Conectado com Sucesso!</h2>
+        <h2 style="margin-top: 5px;">Conectado!</h2>
         <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: <span id="meu-nome"></span></p>
         <div class="spinner"></div>
-        <p style="color: #888; font-size: 14px;">Aguarde o Host realizar a distribuição das credenciais...</p>
+        <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a partida...</p>
+        
+        <div id="bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;">
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Emoji:</p>
+            <div id="grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
+        </div>
     </div>
 
     <div id="tela-jogo" class="escondido">
@@ -57,20 +66,32 @@
 
     <div class="box escondido" id="tela-escondida">
         <h2>🔒 Tela Protegida</h2>
-        <p style="color: #aaa; font-size: 15px;">Mantenha suas informações em segredo. Preste atenção nas declarações orais do grupo.</p>
+        <p style="color: #aaa; font-size: 15px;">Mantenha suas informações em segredo. Preste atenção nas declarações da mesa.</p>
         <button class="btn-ja-foi" onclick="clicouJaFoi()">Palavra Repetida (Já foi!)</button>
     </div>
 
     <div class="box escondido" id="tela-votacao">
         <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO SECRETA</h2>
-        <p style="color: #aaa; font-size: 14px; margin-bottom: 15px;">Selecione o suspeito que você acredita ser o Impostor:</p>
-        <div id="botoes-votacao" style="max-height: 50vh; overflow-y: auto;"></div>
+        
+        <div id="aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
+            ⚠️ <strong>Alerta:</strong> O Elemento do Caos alterou a quantidade de Impostores nesta rodada!
+        </div>
+        
+        <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;" id="texto-alvo-votos">Selecione <strong style="color:white" id="qtd-alvo">1</strong> suspeito(s):</p>
+        
+        <div id="botoes-votacao" style="max-height: 40vh; overflow-y: auto;"></div>
+        
+        <button id="btn-submeter-voto" onclick="submeterVoto()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto</button>
     </div>
 
     <script>
         const socket = io();
         let meu_nome_atual = "";
         let codigo_atual = "";
+        
+        // Variáveis de controle de votação múltipla
+        let votos_selecionados = [];
+        let max_votos_permitidos = 1;
 
         window.onload = () => {
             const nomeSalvo = localStorage.getItem('leoposter_nome');
@@ -111,8 +132,41 @@
             document.getElementById('meu-nome').innerText = dados.nome;
         });
 
+        // Carrega e atualiza a grade de emojis na tela de espera
+        socket.on('retorno_lobby_celular', (dados) => {
+            socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
+            document.getElementById('tela-espera').classList.remove('escondido');
+            document.getElementById('tela-espera').innerHTML = `
+                <h2 style="margin-top: 5px;">De volta ao Lobby!</h2>
+                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: ${meu_nome_atual}</p>
+                <div class="spinner"></div>
+                <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a próxima partida...</p>
+                <div id="bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px;">
+                    <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Emoji:</p>
+                    <div id="grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
+                </div>
+            `;
+            if (dados && dados.emojis_disponiveis) atualizarGradeEmojis(dados.emojis_disponiveis);
+        });
+
+        socket.on('atualizar_lista_emojis', (dados) => {
+            atualizarGradeEmojis(dados.emojis_disponiveis);
+        });
+
+        function atualizarGradeEmojis(lista) {
+            const grade = document.getElementById('grade-emojis');
+            if(!grade) return;
+            grade.innerHTML = '';
+            lista.forEach(e => {
+                let span = document.createElement('span');
+                span.className = 'emoji-opt';
+                span.innerText = e;
+                span.onclick = () => { socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meu_nome_atual, emoji: e}); };
+                grade.appendChild(span);
+            });
+        }
+
         socket.on('distribuir_papeis', (dados) => {
-            // Desliga imediatamente a retentativa do Servidor!
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
             document.getElementById('tela-espera').classList.add('escondido');
@@ -182,9 +236,6 @@
             document.getElementById('tela-espera').classList.add('escondido');
             document.getElementById('tela-votacao').classList.remove('escondido');
 
-            const divBotoes = document.getElementById('botoes-votacao');
-            divBotoes.innerHTML = '';
-
             if (dados.ja_votou) {
                 document.getElementById('tela-votacao').classList.add('escondido');
                 document.getElementById('tela-espera').classList.remove('escondido');
@@ -192,23 +243,55 @@
                 return;
             }
 
+            // Reseta controles
+            votos_selecionados = [];
+            max_votos_permitidos = dados.qtd_votos || 1;
+            document.getElementById('qtd-alvo').innerText = max_votos_permitidos;
+            document.getElementById('btn-submeter-voto').disabled = true;
+
+            // Mostra aviso se o caos influenciou a quantidade
+            if(dados.caos_geral) document.getElementById('aviso-caos-votacao').classList.remove('escondido');
+            else document.getElementById('aviso-caos-votacao').classList.add('escondido');
+
+            const divBotoes = document.getElementById('botoes-votacao');
+            divBotoes.innerHTML = '';
+
             dados.jogadores.forEach(j => {
                 if(j.nome !== meu_nome_atual) {
                     const btn = document.createElement('button');
                     btn.className = 'voto-btn';
                     btn.innerText = `${j.emoji} ${j.nome}`;
-                    btn.onclick = () => enviarVoto(j.nome);
+                    btn.onclick = () => alternarVoto(btn, j.nome);
                     divBotoes.appendChild(btn);
                 }
             });
         });
 
-        function enviarVoto(nomeVotado) {
-            socket.emit('enviar_voto', { codigo: codigo_atual, nome: meu_nome_atual, voto: nomeVotado });
+        function alternarVoto(btn, nome) {
+            if (votos_selecionados.includes(nome)) {
+                // Desmarca
+                votos_selecionados = votos_selecionados.filter(n => n !== nome);
+                btn.classList.remove('selecionado');
+            } else {
+                // Tenta marcar
+                if (votos_selecionados.length < max_votos_permitidos) {
+                    votos_selecionados.push(nome);
+                    btn.classList.add('selecionado');
+                }
+            }
             
-            document.getElementById('tela-votacao').classList.add('escondido');
-            document.getElementById('tela-espera').classList.remove('escondido');
-            document.getElementById('tela-espera').innerHTML = "<h3>Voto Computado!</h3><p style='color:#aaa;'>Aguarde a apuração na tela principal...</p>";
+            // Só libera o envio se o array de votos tiver O TAMANHO EXATO de impostores na mesa
+            const btnEnviar = document.getElementById('btn-submeter-voto');
+            btnEnviar.disabled = (votos_selecionados.length !== max_votos_permitidos);
+        }
+
+        function submeterVoto() {
+            if (votos_selecionados.length === max_votos_permitidos) {
+                socket.emit('enviar_voto', { codigo: codigo_atual, nome: meu_nome_atual, voto: votos_selecionados });
+                document.getElementById('tela-votacao').classList.add('escondido');
+                document.getElementById('tela-espera').classList.remove('escondido');
+                document.getElementById('tela-espera').innerHTML = "<h3>Votos Computados!</h3><p style='color:#aaa;'>Aguarde a apuração na tela principal...</p>";
+            }
         }
 
         socket.on('votacao_encerrada_celular', () => {
@@ -218,18 +301,6 @@
             document.getElementById('tela-escondida').classList.add('escondido');
             document.getElementById('tela-espera').classList.remove('escondido');
             document.getElementById('tela-espera').innerHTML = "<h3>Rodada Encerrada</h3><p style='color:#aaa;'>Confira os resultados na tela principal.</p>";
-        });
-
-        socket.on('retorno_lobby_celular', () => {
-            socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
-            
-            document.getElementById('tela-espera').classList.remove('escondido');
-            document.getElementById('tela-espera').innerHTML = `
-                <h2 style="margin-top: 5px;">De volta ao Lobby!</h2>
-                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: ${meu_nome_atual}</p>
-                <div class="spinner"></div>
-                <p style="color: #888; font-size: 14px;">Aguarde o Host iniciar a próxima partida...</p>
-            `;
         });
     </script>
 </body>
