@@ -220,6 +220,14 @@
             btn.style.cursor = "pointer";
             btn.innerText = "Abrir Votação nos Dispositivos";
         });
+        
+        socket.on('travar_botao_votacao_host', () => {
+            const btn = document.getElementById('btn-abrir-votacao');
+            btn.disabled = true;
+            btn.style.opacity = "0.3";
+            btn.style.cursor = "not-allowed";
+            btn.innerText = "Aguardando Todos os Jogadores Lerem o Papel...";
+        });
 
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
