@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #1c1c1c; color: #f5f5f5; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; overflow: hidden; }
-        .box { background: #292929; padding: 25px; border-radius: 12px; width: 88%; max-width: 360px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); box-sizing: border-box; }
+        .box { background: #292929; padding: 25px; border-radius: 12px; width: 88%; max-width: 360px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); box-sizing: border-box; position: relative;}
         input, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 6px; border: none; font-size: 16px; box-sizing: border-box; font-weight: bold; }
         input { background: #121212; color: white; text-align: center; text-transform: uppercase; border: 1px solid #444; }
         button { background-color: #3498db; color: white; cursor: pointer; transition: 0.2s; }
@@ -16,6 +16,7 @@
         .escondido { display: none !important; }
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         #tela-jogo { width: 88%; max-width: 380px; padding: 25px; border-radius: 12px; border: 4px solid transparent; background-color: #121212; box-sizing: border-box; }
         .inocente { border-color: #2ecc71 !important; }
         .impostor { border-color: #e74c3c !important; }
@@ -24,7 +25,8 @@
         .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
         .btn-ja-foi { background-color: #d35400; margin-top: 20px; font-size: 14px; }
         
-        /* CSS do Emoji Picker em Tempo Real */
+        #btn-sair-sala { position: absolute; top: 15px; left: 15px; background: #c0392b; width: auto; padding: 8px 12px; font-size: 12px; z-index: 1000; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+        
         .emoji-opt-container {
             position: relative;
             display: inline-block;
@@ -49,14 +51,14 @@
             background: #2980b9;
             border: 2px solid #3498db;
             box-sizing: border-box;
-            line-height: 44px; /* ajuste pela borda */
+            line-height: 44px;
         }
         .nome-sobre-emoji {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ff4757; /* Vermelho forte */
+            color: #ff4757;
             font-size: 11px;
             font-weight: 900;
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8);
@@ -70,6 +72,8 @@
     </style>
 </head>
 <body>
+
+    <button id="btn-sair-sala" class="escondido" onclick="sairDaSala()">⬅ Sair da Sala</button>
 
     <div class="box" id="tela-login">
         <h1 style="margin: 0 0 5px 0; font-size: 32px; letter-spacing: 1px;">Leoposter</h1>
@@ -159,11 +163,21 @@
                 socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual });
             }
         }
+        
+        function sairDaSala() {
+            if(confirm("Deseja realmente sair da sala? Você voltará ao menu principal.")) {
+                socket.emit('sair_da_sala', { codigo: codigo_atual, nome: meu_nome_atual });
+                localStorage.removeItem('leoposter_nome');
+                localStorage.removeItem('leoposter_codigo');
+                location.reload();
+            }
+        }
 
         socket.on('erro_conexao', (dados) => {
             alert(dados.mensagem);
             localStorage.removeItem('leoposter_nome');
             localStorage.removeItem('leoposter_codigo');
+            document.getElementById('btn-sair-sala').classList.add('escondido');
         });
 
         socket.on('foi_expulso', () => {
@@ -175,10 +189,10 @@
         socket.on('entrada_sucesso', (dados) => {
             document.getElementById('tela-login').classList.add('escondido');
             document.getElementById('tela-espera').classList.remove('escondido');
+            document.getElementById('btn-sair-sala').classList.remove('escondido');
             document.getElementById('meu-nome').innerText = dados.nome;
         });
 
-        // Este evento abastece a Grade Dinâmica de Emojis
         socket.on('lista_jogadores_atualizada', (dados) => {
             listaJogadoresCache = dados.jogadores;
             renderizarGradeEmojis();
@@ -220,9 +234,12 @@
 
         socket.on('retorno_lobby_celular', () => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
-            document.getElementById('tela-espera').classList.remove('escondido');
             
-            // Força o re-render com o cache atual, caso a UI tenha resetado
+            document.getElementById('tela-escondida').classList.add('escondido');
+            document.getElementById('tela-jogo').classList.add('escondido');
+            document.getElementById('tela-votacao').classList.add('escondido');
+            
+            document.getElementById('tela-espera').classList.remove('escondido');
             renderizarGradeEmojis();
         });
 
@@ -230,7 +247,6 @@
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
             document.getElementById('tela-espera').classList.add('escondido');
-            document.getElementById('tela-escondida').classList.add('escondido');
             document.getElementById('tela-votacao').classList.add('escondido');
             
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
@@ -240,12 +256,15 @@
             });
             
             if (dados.ja_confirmou) {
+                document.getElementById('tela-jogo').classList.add('escondido');
                 document.getElementById('tela-escondida').classList.remove('escondido');
                 return;
             }
 
+            document.getElementById('tela-escondida').classList.add('escondido');
             const telaJogo = document.getElementById('tela-jogo');
             telaJogo.classList.remove('escondido');
+            
             document.getElementById('tema-display').innerText = dados.tema;
             document.getElementById('palavra-secreta').innerText = dados.palavra_ou_dica;
             
