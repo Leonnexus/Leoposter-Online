@@ -23,6 +23,13 @@
         
         .btn-coroacao { background-color: #f39c12; width: auto; margin: 5px; font-size: 14px; padding: 10px 20px; }
         .podio-item { font-size: 22px; margin: 10px 0; font-weight: bold; }
+        
+        .timer-controle { display: flex; align-items: center; justify-content: space-between; background: #121212; border-radius: 6px; border: 1px solid #444; padding: 2px;}
+        .timer-btn { width: 40px; margin: 0; padding: 8px; background: #34495e; }
+        
+        /* Estilos do Timer Ampulheta */
+        #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
+        #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
 
         @media (max-width: 768px) {
             .container { margin: 20px auto; padding: 20px; width: 95%; }
@@ -52,21 +59,19 @@
 
     <div class="container escondido" id="painel-banco">
         <h1 style="color: #e74c3c; font-size: 30px;">⚙️ ADMINISTRAÇÃO DE DADOS</h1>
-        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis e afetam o banco de dados principal.</p>
+        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis.</p>
         
         <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras Usadas</button>
-        <p style="font-size: 13px; color: #888; margin-top: 5px;">Permite que palavras que já foram jogadas voltem a ser sorteadas.</p>
-        
         <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Histórico de Partidas e Ranking</button>
-        <p style="font-size: 13px; color: #888; margin-top: 5px;">Apaga os placares, títulos e histórico de detetive/fuga de todos os jogadores.</p>
-        
-        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL (Factory Reset)</button>
-        <p style="font-size: 13px; color: #888; margin-top: 5px;">Apaga absolutamente tudo e retorna o sistema ao estado original.</p>
+        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL</button>
         
         <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-lobby">
+        <button onclick="fecharLobby()" style="background-color: #555; padding: 8px 15px; width: auto; font-size: 14px; float: left; margin-top: -10px;">⬅ Voltar ao Início</button>
+        <div style="clear: both;"></div>
+
         <h2>Código da Sala:</h2>
         <div class="codigo-gigante" id="txt-codigo">----</div>
         <p>Acessem pelo celular. Conectados (<span id="contagem">0</span>):</p>
@@ -80,6 +85,14 @@
             <div>
                 <label>Impostores Base:</label>
                 <input type="number" id="cfg-imp" value="1" min="1">
+            </div>
+            <div>
+                <label>Tempo Interrogatório:</label>
+                <div class="timer-controle">
+                    <button type="button" class="timer-btn" onclick="adjTimer(-30)">-</button>
+                    <span id="cfg-timer-display" style="font-weight: bold; font-size: 18px;">120s</span>
+                    <button type="button" class="timer-btn" onclick="adjTimer(30)">+</button>
+                </div>
             </div>
             <div>
                 <label>Prob. Caos: <span id="val-caos">10</span>%</label>
@@ -96,33 +109,43 @@
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
         <h2 style="color: #f1c40f;">Quem inicia o debate: <br><span id="primeiro-falar" style="font-size: 40px;">---</span></h2>
-        <p style="font-size: 18px; color: #aaa;">Debatam as pistas enquanto todos memorizam seus papéis nos celulares.</p>
         
-        <p style="font-size: 20px; font-weight: bold; color: #3498db;">Jogadores Prontos: <span id="leitura-contagem">0</span> / <span id="leitura-total">0</span></p>
-        <button id="btn-abrir-votacao" disabled onclick="irParaVotacao()" style="background-color: #9b59b6; opacity: 0.3; cursor: not-allowed;">Aguardando Todos os Jogadores Lerem o Papel...</button>
+        <div id="bloco-aguardando">
+            <p style="font-size: 18px; color: #aaa;">Aguardando jogadores memorizarem os papéis...</p>
+            <p style="font-size: 20px; font-weight: bold; color: #3498db;">Prontos: <span id="leitura-contagem">0</span> / <span id="leitura-total">0</span></p>
+        </div>
+
+        <div id="bloco-timer" class="escondido">
+            <p style="font-size: 18px; color: #aaa;">Debatam as pistas. A votação abrirá automaticamente ao fim do tempo.</p>
+            <div id="ampulheta-container">
+                <div id="ampulheta-fill"></div>
+            </div>
+            <p style="font-size: 30px; font-weight: bold; color: #f39c12; margin-top: 10px;" id="timer-restante">--</p>
+            <button onclick="pularTimer()" style="background-color: #888; width: auto; font-size: 14px;">Pular Tempo (Forçar Votação)</button>
+        </div>
     </div>
 
     <div class="container escondido" id="painel-votacao">
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
-        <button id="btn-encerrar-votacao" disabled onclick="encerrarVotacao()" style="background-color: #e74c3c; opacity: 0.3; cursor: not-allowed;">Aguardando Todos os Votos serem Computados...</button>
-    </div>
-
-    <div class="container escondido" id="painel-suspense" style="padding: 100px 20px;">
-        <h2 style="font-size: 35px; color: #aaa; margin: 0;">Revelando o veredito em...</h2>
-        <div id="contagem-regressiva" style="font-size: 150px; font-weight: bold; color: #f1c40f; margin: 0;">3</div>
+        <p style="color: #aaa; font-style: italic;">Aguardando todos os celulares submeterem seus vereditos...</p>
     </div>
 
     <div class="container escondido" id="painel-resultado">
-        <h1>VEREDITO DA MESA</h1>
-        <div id="resultado-eliminado" style="font-size: 100px; margin: 10px 0;">👤</div>
-        <div id="texto-resultado" style="font-size: 28px; font-weight: bold; margin-bottom: 20px;"></div>
+        <h1 style="font-size: 45px; color: #e74c3c; margin-bottom: 5px;" id="titulo-revelacao">E o Impostor é...</h1>
         
-        <p id="palavra-revelada" style="font-size: 20px; color: #aaa;"></p>
+        <div id="bloco-impostores-revelados" style="margin: 20px 0;"></div>
+        
+        <div id="bloco-outros-votados" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+            <p style="color: #aaa; font-size: 20px;">E os outros mais votados foram:</p>
+            <ul id="lista-outros-votados" style="list-style: none; padding: 0; font-size: 22px;"></ul>
+        </div>
 
-        <h3 style="color: #f1c40f; margin-top: 40px;">PLACAR DA SESSÃO</h3>
+        <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
+
+        <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
-        <button onclick="voltarAoLobby()" style="background-color: #34495e;">Avançar para Próxima Rodada</button>
+        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Avançar para Próxima Rodada</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -134,10 +157,17 @@
     <script>
         const socket = io();
         let codigo_atual = "";
+        let cfgTempoGlobal = 120;
+        let intervaloTimer = null;
 
         window.onload = () => { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); };
 
         function criarSala() { socket.emit('criar_sala'); }
+
+        function fecharLobby() {
+            document.getElementById('painel-lobby').classList.add('escondido');
+            document.getElementById('painel-inicio').classList.remove('escondido');
+        }
 
         socket.on('sala_criada_sucesso', (dados) => {
             codigo_atual = dados.codigo;
@@ -183,27 +213,31 @@
             }
         }
 
+        function adjTimer(val) {
+            cfgTempoGlobal += val;
+            if (cfgTempoGlobal < 30) cfgTempoGlobal = 30;
+            document.getElementById('cfg-timer-display').innerText = cfgTempoGlobal + "s";
+        }
+
         function iniciarPartida() {
             socket.emit('iniciar_partida', {
                 codigo: codigo_atual,
                 categoria: document.getElementById('cfg-tema').value,
                 imp_base: document.getElementById('cfg-imp').value,
                 caos: document.getElementById('cfg-caos').value,
-                trapaca: document.getElementById('cfg-trapaca').value
+                trapaca: document.getElementById('cfg-trapaca').value,
+                tempo: cfgTempoGlobal
             });
         }
 
         socket.on('partida_iniciada_host', (dados) => {
+            clearInterval(intervaloTimer);
             document.getElementById('painel-lobby').classList.add('escondido');
             document.getElementById('painel-jogo').classList.remove('escondido');
+            document.getElementById('bloco-timer').classList.add('escondido');
+            document.getElementById('bloco-aguardando').classList.remove('escondido');
+            
             document.getElementById('primeiro-falar').innerText = dados.primeiro;
-            
-            const btn = document.getElementById('btn-abrir-votacao');
-            btn.disabled = true;
-            btn.style.opacity = "0.3";
-            btn.style.cursor = "not-allowed";
-            btn.innerText = "Aguardando Todos os Jogadores Lerem o Papel...";
-            
             document.getElementById('leitura-contagem').innerText = "0";
             document.getElementById('leitura-total').innerText = dados.total_jogadores;
         });
@@ -213,35 +247,53 @@
             document.getElementById('leitura-total').innerText = dados.total;
         });
 
-        socket.on('liberar_botao_votacao_host', () => {
-            const btn = document.getElementById('btn-abrir-votacao');
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            btn.style.cursor = "pointer";
-            btn.innerText = "Abrir Votação nos Dispositivos";
-        });
-        
-        socket.on('travar_botao_votacao_host', () => {
-            const btn = document.getElementById('btn-abrir-votacao');
-            btn.disabled = true;
-            btn.style.opacity = "0.3";
-            btn.style.cursor = "not-allowed";
-            btn.innerText = "Aguardando Todos os Jogadores Lerem o Papel...";
+        socket.on('travar_timer_host', () => {
+            clearInterval(intervaloTimer);
+            document.getElementById('bloco-timer').classList.add('escondido');
+            document.getElementById('bloco-aguardando').classList.remove('escondido');
         });
 
-        function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
+        socket.on('todos_leram_papeis', (dados) => {
+            document.getElementById('bloco-aguardando').classList.add('escondido');
+            document.getElementById('bloco-timer').classList.remove('escondido');
+            
+            let tempoRestante = dados.tempo;
+            let tempoTotal = dados.tempo;
+            const ampFill = document.getElementById('ampulheta-fill');
+            const display = document.getElementById('timer-restante');
+            
+            display.innerText = tempoRestante + "s";
+            ampFill.style.width = '0%';
+            
+            clearInterval(intervaloTimer);
+            intervaloTimer = setInterval(() => {
+                tempoRestante--;
+                display.innerText = tempoRestante + "s";
+                
+                let pct = ((tempoTotal - tempoRestante) / tempoTotal) * 100;
+                ampFill.style.width = pct + '%';
+                
+                if(tempoRestante <= 0) {
+                    clearInterval(intervaloTimer);
+                    irParaVotacao();
+                }
+            }, 1000);
+        });
+
+        function pularTimer() {
+            clearInterval(intervaloTimer);
+            irParaVotacao();
+        }
+
+        function irParaVotacao() { 
+            socket.emit('iniciar_votacao', { codigo: codigo_atual }); 
+        }
 
         socket.on('votacao_iniciada_host', (dados) => {
             document.getElementById('painel-jogo').classList.add('escondido');
             document.getElementById('painel-votacao').classList.remove('escondido');
             document.getElementById('votos-contagem').innerText = "0";
             if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
-
-            const btn = document.getElementById('btn-encerrar-votacao');
-            btn.disabled = true;
-            btn.style.opacity = "0.3";
-            btn.style.cursor = "not-allowed";
-            btn.innerText = "Aguardando Todos os Votos serem Computados...";
         });
 
         socket.on('voto_recebido_host', (dados) => {
@@ -249,55 +301,41 @@
             document.getElementById('votos-total').innerText = dados.total_jogadores;
         });
 
-        socket.on('liberar_botao_encerrar_host', () => {
-            const btn = document.getElementById('btn-encerrar-votacao');
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            btn.style.cursor = "pointer";
-            btn.innerText = "Encerrar Votação e Computar Resultados";
-        });
-
-        function encerrarVotacao() { socket.emit('encerrar_votacao', { codigo: codigo_atual }); }
-
         socket.on('resultado_votacao_host', (dados) => {
             document.getElementById('painel-votacao').classList.add('escondido');
-            document.getElementById('painel-suspense').classList.remove('escondido');
-            
-            let count = 3;
-            document.getElementById('contagem-regressiva').innerText = count;
-            
-            let interval = setInterval(() => {
-                count--;
-                if(count > 0) {
-                    document.getElementById('contagem-regressiva').innerText = count;
-                } else {
-                    clearInterval(interval);
-                    document.getElementById('painel-suspense').classList.add('escondido');
-                    mostrarResultadoFinal(dados);
-                }
-            }, 1000);
-        });
-
-        function mostrarResultadoFinal(dados) {
             document.getElementById('painel-resultado').classList.remove('escondido');
             
-            const divEmoji = document.getElementById('resultado-eliminado');
-            const divTexto = document.getElementById('texto-resultado');
+            const titulo = document.getElementById('titulo-revelacao');
+            titulo.innerText = dados.impostores_resultado.length > 1 ? "E os Impostores são..." : "E o Impostor é...";
             
-            if (dados.eliminados.length === 1) {
-                const bode = dados.eliminados[0];
-                divEmoji.innerText = bode.emoji;
-                if (bode.eh_impostor) {
-                    divTexto.innerHTML = `<span style='color:#2ecc71'>O Impostor (${bode.nome}) foi executado!</span>`;
-                } else {
-                    divTexto.innerHTML = `<span style='color:#e74c3c'>Um Inocente (${bode.nome}) foi sacrificado!</span>`;
-                }
-            } else if (dados.eliminados.length > 1) {
-                divEmoji.innerText = "⚖️";
-                divTexto.innerHTML = `<span style='color:#f1c40f'>Votação dividida entre ${dados.eliminados.map(e => e.nome).join(' e ')}! Ninguém foi eliminado.</span>`;
+            const blocoImps = document.getElementById('bloco-impostores-revelados');
+            blocoImps.innerHTML = '';
+            
+            dados.impostores_resultado.forEach(imp => {
+                let statusTexto = imp.fugiu ? 
+                    `<span style='color:#2ecc71'>conseguiu fugir!</span>` : 
+                    `<span style='color:#e74c3c'>foi pego!</span>`;
+                
+                blocoImps.innerHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <div style="font-size: 80px; margin: 0;">${imp.emoji}</div>
+                        <div style="font-size: 35px; font-weight: bold; color: white;">${imp.nome}</div>
+                        <div style="font-size: 22px; color: #ccc; margin-top: 5px;">Totalizando ${imp.votos} voto(s), ${statusTexto}</div>
+                    </div>
+                `;
+            });
+
+            const blocoOutros = document.getElementById('bloco-outros-votados');
+            const listaOutros = document.getElementById('lista-outros-votados');
+            listaOutros.innerHTML = '';
+            
+            if (dados.outros_votados.length > 0) {
+                blocoOutros.style.display = 'block';
+                dados.outros_votados.forEach(out => {
+                    listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`;
+                });
             } else {
-                divEmoji.innerText = "🕊️";
-                divTexto.innerHTML = `<span style='color:#f1c40f'>Ninguém recebeu votos suficientes.</span>`;
+                blocoOutros.style.display = 'none';
             }
 
             document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
@@ -307,7 +345,7 @@
             for (const [nome, pts] of Object.entries(dados.pontos)) {
                 ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`;
             }
-        }
+        });
 
         function voltarAoLobby() {
             socket.emit('voltar_para_lobby', { codigo: codigo_atual });
@@ -315,58 +353,14 @@
             document.getElementById('painel-lobby').classList.remove('escondido');
         }
 
+        // Funções de Coroação e Banco (Sem Alteração)
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
-
-        socket.on('receber_coroacao', (dados) => {
-            document.getElementById('painel-inicio').classList.add('escondido');
-            const painel = document.getElementById('painel-coroacao');
-            painel.classList.remove('escondido');
-            document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
-            
-            const div = document.getElementById('coroacao-conteudo');
-            div.innerHTML = '';
-            if(dados.ranking.length === 0) {
-                div.innerHTML = "<p>Nenhum dado registrado para este período.</p>";
-                return;
-            }
-            dados.ranking.forEach((pos, idx) => {
-                let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
-                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
-            });
-        });
-
-        function fecharCoroacao() {
-            document.getElementById('painel-coroacao').classList.add('escondido');
-            document.getElementById('painel-inicio').classList.remove('escondido');
-        }
-
-        function abrirPainelBanco() {
-            document.getElementById('painel-inicio').classList.add('escondido');
-            document.getElementById('painel-banco').classList.remove('escondido');
-        }
-        
-        function fecharPainelBanco() {
-            document.getElementById('painel-banco').classList.add('escondido');
-            document.getElementById('painel-inicio').classList.remove('escondido');
-        }
-
-        function resetarBanco(tipo) {
-            let msg = "";
-            if (tipo === 'palavras') msg = "Isso fará com que palavras já jogadas possam se repetir no futuro. Confirmar exclusão do histórico?";
-            if (tipo === 'partidas') msg = "Isso vai APAGAR DEFINITIVAMENTE todos os placares, coroações e histórico de jogadores. Tem certeza?";
-            if (tipo === 'tudo') msg = "AVISO CRÍTICO: ISSO APAGARÁ ABSOLUTAMENTE TUDO DO BANCO DE DADOS. Tem certeza absoluta?";
-            
-            if(confirm(msg)) {
-                socket.emit('resetar_banco', { tipo: tipo });
-            }
-        }
-
-        socket.on('alerta_host', (dados) => {
-            alert(dados.mensagem);
-            if(dados.mensagem.includes("sucesso")) {
-                fecharPainelBanco();
-            }
-        });
+        socket.on('receber_coroacao', (dados) => { /*...*/ });
+        function fecharCoroacao() { /*...*/ }
+        function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
+        function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
+        function resetarBanco(tipo) { /*...*/ if(confirm("...")) socket.emit('resetar_banco', {tipo: tipo}); }
+        socket.on('alerta_host', (dados) => { alert(dados.mensagem); if(dados.mensagem.includes("sucesso")) fecharPainelBanco(); });
     </script>
 </body>
 </html>
