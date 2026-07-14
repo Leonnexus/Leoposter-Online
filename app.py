@@ -187,7 +187,7 @@ def enviar_estado_jogador(sala, jogador):
         socketio.emit('votacao_encerrada_celular', {}, to=sid)
         
     elif fase == 'lobby':
-        socketio.emit('retorno_lobby_celular', {'emojis_disponiveis': sala['emojis_disponiveis']}, to=sid)
+        socketio.emit('retorno_lobby_celular', {}, to=sid)
 
 def monitorar_confirmacoes(codigo, fase_esperada, iteracao_id):
     eventlet.sleep(2)
@@ -246,8 +246,7 @@ def criar_sala():
         'impostores_atuais': [],
         'palavra_atual': '',
         'tempo_discussao': 120,
-        'votos': {},
-        'emojis_disponiveis': EMOJIS_DISPONIVEIS.copy()
+        'votos': {}
     }
     carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
@@ -314,10 +313,9 @@ def entrar_na_sala(dados):
     if nome not in sala['historico_impostores']:
         sala['historico_impostores'][nome] = 0
 
-    opcoes = sala['emojis_disponiveis']
+    emojis_usados = [j['emoji'] for j in sala['jogadores']]
+    opcoes = [e for e in EMOJIS_DISPONIVEIS if e not in emojis_usados]
     meu_emoji = random.choice(opcoes if opcoes else EMOJIS_DISPONIVEIS)
-    if meu_emoji in sala['emojis_disponiveis']:
-        sala['emojis_disponiveis'].remove(meu_emoji)
 
     join_room(codigo)
     sala['jogadores'].append({'sid': request.sid, 'nome': nome, 'emoji': meu_emoji})
@@ -325,7 +323,7 @@ def entrar_na_sala(dados):
     lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
     emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
     emit('entrada_sucesso', {'nome': nome, 'reconexao': False})
-    emit('retorno_lobby_celular', {'emojis_disponiveis': sala['emojis_disponiveis']}, to=request.sid)
+    emit('retorno_lobby_celular', {}, to=request.sid)
 
 @socketio.on('trocar_emoji')
 def trocar_emoji(dados):
@@ -335,15 +333,13 @@ def trocar_emoji(dados):
     sala = salas_ativas.get(codigo)
     if not sala or sala['fase_atual'] != 'lobby': return
 
-    jogador = next((j for j in sala['jogadores'] if j['nome'] == nome), None)
-    if jogador and novo_emoji in sala['emojis_disponiveis']:
-        sala['emojis_disponiveis'].append(jogador['emoji']) 
-        sala['emojis_disponiveis'].remove(novo_emoji)
-        jogador['emoji'] = novo_emoji
-        
-        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
-        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
-        emit('atualizar_lista_emojis', {'emojis_disponiveis': sala['emojis_disponiveis']}, to=codigo)
+    emojis_em_uso = [j['emoji'] for j in sala['jogadores']]
+    if novo_emoji not in emojis_em_uso and novo_emoji in EMOJIS_DISPONIVEIS:
+        jogador = next((j for j in sala['jogadores'] if j['nome'] == nome), None)
+        if jogador:
+            jogador['emoji'] = novo_emoji
+            lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+            emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
 
 @socketio.on('expulsar_jogador')
 def expulsar_jogador(dados):
@@ -353,12 +349,10 @@ def expulsar_jogador(dados):
     if sala:
         jogador = next((j for j in sala['jogadores'] if j['nome'] == nome_expulso), None)
         if jogador:
-            sala['emojis_disponiveis'].append(jogador['emoji'])
             sala['jogadores'].remove(jogador)
             emit('foi_expulso', {}, to=jogador['sid'])
             lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
             emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
-            emit('atualizar_lista_emojis', {'emojis_disponiveis': sala['emojis_disponiveis']}, to=codigo)
             
             if sala['fase_atual'] == 'revelacao':
                 sala['jogadores_prontos'].discard(nome_expulso)
@@ -518,14 +512,12 @@ def receber_voto(dados):
     sala = salas_ativas.get(codigo)
     if not sala: return
     
-    # O voto agora é uma lista de suspeitos selecionados
     sala['votos'][dados.get('nome')] = dados.get('voto') 
     total_votos = len(sala['votos'])
     total_jogadores = len(sala['jogadores'])
     
     emit('voto_recebido_host', {'total_votos': total_votos, 'total_jogadores': total_jogadores}, to=sala['host_sid'])
     
-    # Se todos votaram, encerra automaticamente sem precisar clicar em nada na TV
     if total_votos >= total_jogadores:
         encerrar_votacao_interna(codigo)
 
@@ -540,7 +532,6 @@ def encerrar_votacao_interna(codigo):
     votos = sala.get('votos', {})
     contagem = {}
     
-    # IMPORTANTE: Votos de impostores NÃO contabilizam para eliminar ninguém
     for eleitor, lista_votados in votos.items():
         if eleitor not in sala['impostores_atuais']:
             for votado in lista_votados:
@@ -549,7 +540,6 @@ def encerrar_votacao_interna(codigo):
     max_votos = max(contagem.values()) if contagem else 0
     eliminados = [k for k, v in contagem.items() if v == max_votos] if max_votos > 0 else []
 
-    # Determina quem de fato rodou (só elimina se não for empate)
     foi_eliminado_de_fato = eliminados[0] if len(eliminados) == 1 else None
     
     pontos_da_rodada = {}
@@ -558,16 +548,16 @@ def encerrar_votacao_interna(codigo):
     for j in sala['jogadores']:
         nome = j['nome']
         eh_impostor = nome in sala['impostores_atuais']
-        votos_recebidos = contagem.get(nome, 0) # Mostra apenas votos recebidos de inocentes
+        votos_recebidos = contagem.get(nome, 0)
         votos_dados = votos.get(nome, [])
         
         acertos_detetive = sum(1 for v in votos_dados if v in sala['impostores_atuais']) if not eh_impostor else 0
         
         pts = 0
         if eh_impostor:
-            if nome != foi_eliminado_de_fato: pts = 2 # Impostor pontua se não for enforcado
+            if nome != foi_eliminado_de_fato: pts = 2
         else:
-            if acertos_detetive > 0: pts = acertos_detetive # 1 ponto por cada impostor acertado
+            if acertos_detetive > 0: pts = acertos_detetive
             
         pontos_da_rodada[nome] = pts
         sala['placar'][nome] = sala['placar'].get(nome, 0) + pts
@@ -583,7 +573,6 @@ def encerrar_votacao_interna(codigo):
         salvar_banco_dados(pontos_da_rodada, sala['placar'], sala['id_partida'], detalhes_rodada, sala['historico_impostores'], sala['palavras_usadas'], sala['acumulado_caos'], sala['acumulado_trapaca'])
     except Exception as e: print("Erro ao salvar no banco:", e)
 
-    # Preparar Dados Ricos para Tela do Host (Os Textos Exatos)
     impostores_resultado = []
     for imp in sala['impostores_atuais']:
         impostores_resultado.append({
@@ -627,6 +616,10 @@ def voltar_para_lobby(dados):
             enviar_estado_jogador(sala, jogador)
             
         socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
+        
+        # Emite a lista atualizada para garantir que todos fiquem sincronizados na tela de lobby
+        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=8080)
