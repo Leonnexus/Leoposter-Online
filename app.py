@@ -32,11 +32,8 @@ def obter_ranking_dinamico(tipo):
         df["Data_Real"] = pd.to_datetime(df["Dia"], format="%d/%m/%Y", errors="coerce")
         hoje = pd.Timestamp(datetime.now().date())
 
-        if tipo == "Dia":
-            df = df[df["Data_Real"] == hoje]
-        elif tipo == "Semana":
-            df = df[(df["Data_Real"].dt.isocalendar().week == hoje.isocalendar().week) &
-                    (df["Data_Real"].dt.isocalendar().year == hoje.isocalendar().year)]
+        if tipo == "Dia": df = df[df["Data_Real"] == hoje]
+        elif tipo == "Semana": df = df[(df["Data_Real"].dt.isocalendar().week == hoje.isocalendar().week) & (df["Data_Real"].dt.isocalendar().year == hoje.isocalendar().year)]
         
         if df.empty: return []
 
@@ -49,8 +46,7 @@ def obter_ranking_dinamico(tipo):
 
         ranking.sort(key=lambda x: (x["Média de Pontos"], x["Pontuação Total"]), reverse=True)
         return ranking
-    except ValueError:
-        return []
+    except ValueError: return []
 
 def carregar_dados_sala_do_banco(sala):
     try:
@@ -92,31 +88,25 @@ def salvar_banco_dados(pontos_da_rodada, placar, id_partida, detalhes_rodada, hi
     df_raw = df[df["Dia"] != "SOMATÓRIA"].copy()
     resumo_list, analytics_list = [], []
     for nome, group in df_raw.groupby("Nome"):
-        partidas = group["ID_Partida"].nunique()
-        rodadas = len(group)
-        pts_totais = group["Pontos na Rodada"].sum()
-        media = pts_totais / rodadas if rodadas > 0 else 0
-        vitorias = sum(group["Pontos na Rodada"] > 0)
+        partidas = group["ID_Partida"].nunique(); rodadas = len(group); pts_totais = group["Pontos na Rodada"].sum()
+        media = pts_totais / rodadas if rodadas > 0 else 0; vitorias = sum(group["Pontos na Rodada"] > 0)
         resumo_list.append({"Jogador": nome, "Partidas Jogadas": int(partidas), "Rodadas Jogadas": int(rodadas), "Pontuação Total": int(pts_totais), "Média de Pontos": round(float(media), 2), "Vitórias em Rodadas": int(vitorias)})
         
         impostor_df = group[group["Papel"] == "Impostor"]
-        vz_imp = len(impostor_df)
-        fugas = len(impostor_df[impostor_df["Pontos na Rodada"] > 0])
+        vz_imp = len(impostor_df); fugas = len(impostor_df[impostor_df["Pontos na Rodada"] > 0])
         taxa_fuga = (fugas / vz_imp * 100) if vz_imp > 0 else 0
         
         inocente_df = group[group["Papel"] == "Inocente"]
-        vt_efetuados = inocente_df["Votos_Efetuados"].sum()
-        acertos = inocente_df["Acertos_Detetive"].sum()
+        vt_efetuados = inocente_df["Votos_Efetuados"].sum(); acertos = inocente_df["Acertos_Detetive"].sum()
         taxa_acerto = (acertos / vt_efetuados * 100) if vt_efetuados > 0 else 0
         bode = inocente_df["Votos_Recebidos"].sum()
         
         analytics_list.append({"Jogador": nome, "Taxa de Fuga (%)": round(taxa_fuga, 2), "Faro de Detetive (%)": round(taxa_acerto, 2), "Votos Sofridos Sendo Inocente": int(bode), "Título": "Membro Comum"})
         
-    df_resumo = pd.DataFrame(resumo_list)
-    df_analytics = pd.DataFrame(analytics_list)
+    df_resumo = pd.DataFrame(resumo_list); df_analytics = pd.DataFrame(analytics_list)
     
     if not df_analytics.empty:
-        mf, md, mb = df_analytics["Taxa de Fuga (%)"].max(), df_analytics["Faro de Detetive (%)"].max(), df_analytics["Votos Sofridos Sendo Inocente"].max()
+        mf = df_analytics["Taxa de Fuga (%)"].max(); md = df_analytics["Faro de Detetive (%)"].max(); mb = df_analytics["Votos Sofridos Sendo Inocente"].max()
         for idx, row in df_analytics.iterrows():
             titulos = []
             if row["Taxa de Fuga (%)"] == mf and mf > 0: titulos.append("Loki")
@@ -145,10 +135,8 @@ salas_ativas = {}
 def gerar_codigo_sala():
     while True:
         codigo = ''.join(random.choices(string.ascii_uppercase, k=4))
-        if codigo not in salas_ativas:
-            return codigo
+        if codigo not in salas_ativas: return codigo
 
-# --- SISTEMA DE SINCRONIZAÇÃO FORÇADA ---
 def enviar_estado_jogador(sala, jogador):
     fase = sala.get('fase_atual')
     sid = jogador['sid']
@@ -164,48 +152,30 @@ def enviar_estado_jogador(sala, jogador):
         }
         if eh_impostor:
             payload['palavra_ou_dica'] = sala.get('dica_vaga', '')
-            if sala.get('trapaca_ativo_atual', False):
-                payload['equipe'] = [i for i in sala.get('impostores_atuais', []) if i != jogador['nome']]
-        else:
-            payload['palavra_ou_dica'] = sala.get('palavra_atual', '')
+            if sala.get('trapaca_ativo_atual', False): payload['equipe'] = [i for i in sala.get('impostores_atuais', []) if i != jogador['nome']]
+        else: payload['palavra_ou_dica'] = sala.get('palavra_atual', '')
         socketio.emit('distribuir_papeis', payload, to=sid)
         
     elif fase == 'votacao':
         jogadores_info = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
         ja_votou = jogador['nome'] in sala.get('votos', {})
-        socketio.emit('ir_para_tela_votacao', {
-            'jogadores': jogadores_info, 
-            'ja_votou': ja_votou,
-            'qtd_votos': len(sala['impostores_atuais']),
-            'caos_geral': sala.get('caos_ativo_atual', False)
-        }, to=sid)
-        
-    elif fase == 'resultado':
-        socketio.emit('votacao_encerrada_celular', {}, to=sid)
-        
-    elif fase == 'lobby':
-        socketio.emit('retorno_lobby_celular', {}, to=sid)
+        socketio.emit('ir_para_tela_votacao', {'jogadores': jogadores_info, 'ja_votou': ja_votou, 'qtd_votos': len(sala['impostores_atuais']), 'caos_geral': sala.get('caos_ativo_atual', False)}, to=sid)
+    elif fase == 'resultado': socketio.emit('votacao_encerrada_celular', {}, to=sid)
+    elif fase == 'lobby': socketio.emit('retorno_lobby_celular', {}, to=sid)
 
 def monitorar_confirmacoes(codigo, fase_esperada, iteracao_id):
     eventlet.sleep(2)
     for _ in range(15):
         sala = salas_ativas.get(codigo)
-        if not sala or sala.get('fase_atual') != fase_esperada or sala.get('iteracao_fase') != iteracao_id:
-            break
-        
+        if not sala or sala.get('fase_atual') != fase_esperada or sala.get('iteracao_fase') != iteracao_id: break
         pendentes = [j for j in sala['jogadores'] if j['nome'] not in sala.get('confirmacoes_status', set())]
-        if not pendentes:
-            break
-            
-        for jogador in pendentes:
-            enviar_estado_jogador(sala, jogador)
+        if not pendentes: break
+        for jogador in pendentes: enviar_estado_jogador(sala, jogador)
         eventlet.sleep(3)
 
 @socketio.on('confirmar_status')
 def confirmar_status(dados):
-    codigo = dados.get('codigo')
-    nome = dados.get('nome')
-    status = dados.get('status')
+    codigo = dados.get('codigo'); nome = dados.get('nome'); status = dados.get('status')
     sala = salas_ativas.get(codigo)
     if sala and sala.get('fase_atual') == status:
         if 'confirmacoes_status' not in sala: sala['confirmacoes_status'] = set()
@@ -236,6 +206,23 @@ def criar_sala():
 def solicitar_coroacao(dados):
     emit('receber_coroacao', {'tipo': dados.get('tipo'), 'ranking': obter_ranking_dinamico(dados.get('tipo'))}, to=request.sid)
 
+@socketio.on('deletar_jogador_banco')
+def deletar_jogador_banco(dados):
+    nome = dados.get('nome')
+    if not nome: return
+    try:
+        with engine.begin() as conn:
+            conn.execute(text('DELETE FROM "Rodadas" WHERE "Nome" = :n'), {"n": nome})
+            conn.execute(text('DELETE FROM "Resumo" WHERE "Jogador" = :n'), {"n": nome})
+            conn.execute(text('DELETE FROM "Analytics" WHERE "Jogador" = :n'), {"n": nome})
+            conn.execute(text('DELETE FROM "Historico_Impostores" WHERE "Jogador" = :n'), {"n": nome})
+            for sala in salas_ativas.values():
+                if nome in sala['historico_impostores']: del sala['historico_impostores'][nome]
+                if nome in sala['placar']: del sala['placar'][nome]
+        emit('alerta_host', {'mensagem': f'Todos os dados de {nome} foram apagados com sucesso!'}, to=request.sid)
+    except Exception as e:
+        emit('alerta_host', {'mensagem': f'Erro ao deletar jogador: {str(e)}'}, to=request.sid)
+
 @socketio.on('resetar_banco')
 def resetar_banco(dados):
     tipo = dados.get('tipo')
@@ -261,8 +248,7 @@ def entrar_na_sala(dados):
     codigo = dados.get('codigo', '').strip().upper()
 
     if codigo not in salas_ativas:
-        emit('erro_conexao', {'mensagem': 'Sala não encontrada!'})
-        return
+        emit('erro_conexao', {'mensagem': 'Sala não encontrada!'}); return
 
     sala = salas_ativas[codigo]
     jogador_existente = next((j for j in sala['jogadores'] if j['nome'].lower() == nome.lower()), None)
@@ -277,18 +263,15 @@ def entrar_na_sala(dados):
         return
 
     if sala['fase_atual'] != 'lobby':
-        emit('erro_conexao', {'mensagem': 'A partida já começou! Você não pode entrar no meio do jogo.'})
-        return
+        emit('erro_conexao', {'mensagem': 'A partida já começou! Você não pode entrar no meio do jogo.'}); return
 
     if nome not in sala['historico_impostores']: sala['historico_impostores'][nome] = 0
-
     emojis_usados = [j['emoji'] for j in sala['jogadores']]
     opcoes = [e for e in EMOJIS_DISPONIVEIS if e not in emojis_usados]
     meu_emoji = random.choice(opcoes if opcoes else EMOJIS_DISPONIVEIS)
 
     join_room(codigo)
     sala['jogadores'].append({'sid': request.sid, 'nome': nome, 'emoji': meu_emoji})
-    
     lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
     emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
     emit('entrada_sucesso', {'nome': nome, 'reconexao': False})
@@ -296,8 +279,7 @@ def entrar_na_sala(dados):
 
 @socketio.on('sair_da_sala')
 def sair_da_sala(dados):
-    codigo = dados.get('codigo')
-    nome_sair = dados.get('nome')
+    codigo = dados.get('codigo'); nome_sair = dados.get('nome')
     sala = salas_ativas.get(codigo)
     if sala:
         jogador = next((j for j in sala['jogadores'] if j['nome'] == nome_sair), None)
@@ -306,14 +288,12 @@ def sair_da_sala(dados):
             lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
             emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
             
-            # Se alguém sai no meio do jogo, destrava os contadores do Host para o jogo não ficar preso
             if sala['fase_atual'] == 'revelacao':
                 sala['jogadores_prontos'].discard(nome_sair)
                 sala['jogadores_ja_foi'].discard(nome_sair)
                 emit('progresso_leitura_host', {'prontos': len(sala['jogadores_prontos']), 'total': len(sala['jogadores'])}, to=sala['host_sid'])
                 if len(sala['jogadores']) > 0 and len(sala['jogadores_prontos']) >= len(sala['jogadores']):
                     emit('todos_leram_papeis', {'tempo': sala['tempo_discussao']}, to=sala['host_sid'])
-                    
             elif sala['fase_atual'] == 'votacao':
                 if nome_sair in sala['votos']: del sala['votos'][nome_sair]
                 emit('voto_recebido_host', {'total_votos': len(sala['votos']), 'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
@@ -322,9 +302,7 @@ def sair_da_sala(dados):
 
 @socketio.on('trocar_emoji')
 def trocar_emoji(dados):
-    codigo = dados.get('codigo')
-    nome = dados.get('nome')
-    novo_emoji = dados.get('emoji')
+    codigo = dados.get('codigo'); nome = dados.get('nome'); novo_emoji = dados.get('emoji')
     sala = salas_ativas.get(codigo)
     if not sala or sala['fase_atual'] != 'lobby': return
 
@@ -338,8 +316,7 @@ def trocar_emoji(dados):
 
 @socketio.on('expulsar_jogador')
 def expulsar_jogador(dados):
-    codigo = dados.get('codigo')
-    nome_expulso = dados.get('nome')
+    codigo = dados.get('codigo'); nome_expulso = dados.get('nome')
     sala = salas_ativas.get(codigo)
     if sala:
         jogador = next((j for j in sala['jogadores'] if j['nome'] == nome_expulso), None)
@@ -361,6 +338,22 @@ def expulsar_jogador(dados):
                 if len(sala['jogadores']) > 0 and len(sala['votos']) >= len(sala['jogadores']):
                     encerrar_votacao_interna(codigo)
 
+@socketio.on('forcar_lobby')
+def forcar_lobby(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if sala:
+        sala['fase_atual'] = 'lobby'
+        sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
+        sala['confirmacoes_status'] = set()
+        
+        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
+        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
+        
+        emit('retorno_lobby_host', {}, to=sala['host_sid'])
+        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
+
 @socketio.on('iniciar_partida')
 def iniciar_partida(dados):
     codigo = dados.get('codigo')
@@ -369,8 +362,7 @@ def iniciar_partida(dados):
 
     sala['fase_atual'] = 'revelacao'
     sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
-    sala['confirmacoes_status'] = set()
-    sala['jogadores_prontos'] = set(); sala['jogadores_ja_foi'] = set(); sala['votos'] = {}
+    sala['confirmacoes_status'] = set(); sala['jogadores_prontos'] = set(); sala['jogadores_ja_foi'] = set(); sala['votos'] = {}
     sala['tempo_discussao'] = int(dados.get('tempo', 120))
 
     categoria = dados.get('categoria')
@@ -414,12 +406,9 @@ def iniciar_partida(dados):
     if sum(1 for c in sala['historico_impostores'].values() if c >= 3) >= 3:
         for k in sala['historico_impostores']: sala['historico_impostores'][k] = 0
 
-    sala['impostores_atuais'] = impostores_sorteados
-    sala['palavra_atual'] = palavra_secreta
-    sala['tema_atual'] = categoria
-    sala['dica_vaga'] = dica_vaga
-    sala['caos_ativo_atual'] = caos_ativo
-    sala['trapaca_ativo_atual'] = trapaca_ativo
+    sala['impostores_atuais'] = impostores_sorteados; sala['palavra_atual'] = palavra_secreta
+    sala['tema_atual'] = categoria; sala['dica_vaga'] = dica_vaga
+    sala['caos_ativo_atual'] = caos_ativo; sala['trapaca_ativo_atual'] = trapaca_ativo
 
     primeiro = random.choice(sala['jogadores'])
     primeiro_nome_fmt = f"{primeiro['emoji']} {primeiro['nome']}"
@@ -447,11 +436,9 @@ def clicou_ja_foi(dados):
             sala['palavras_usadas'].difference_update({p[0] for p in BANCO_PALAVRAS[categoria]})
 
         nova_palavra, nova_dica = random.choice(opcoes)
-        sala['palavras_usadas'].add(nova_palavra)
-        sala['palavra_atual'] = nova_palavra; sala['dica_vaga'] = nova_dica
+        sala['palavras_usadas'].add(nova_palavra); sala['palavra_atual'] = nova_palavra; sala['dica_vaga'] = nova_dica
 
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-            
         socketio.start_background_task(monitorar_confirmacoes, codigo, 'revelacao', sala['iteracao_fase'])
         emit('progresso_leitura_host', {'prontos': 0, 'total': len(sala['jogadores'])}, to=sala['host_sid'])
         emit('travar_timer_host', {}, to=sala['host_sid'])
@@ -474,8 +461,7 @@ def iniciar_votacao(dados):
     sala = salas_ativas.get(codigo)
     if not sala: return
     
-    sala['fase_atual'] = 'votacao'
-    sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
+    sala['fase_atual'] = 'votacao'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
     sala['confirmacoes_status'] = set(); sala['votos'] = {}
     
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
@@ -490,38 +476,30 @@ def receber_voto(dados):
     
     sala['votos'][dados.get('nome')] = dados.get('voto') 
     emit('voto_recebido_host', {'total_votos': len(sala['votos']), 'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
-    
-    if len(sala['votos']) >= len(sala['jogadores']):
-        encerrar_votacao_interna(codigo)
+    if len(sala['votos']) >= len(sala['jogadores']): encerrar_votacao_interna(codigo)
 
 def encerrar_votacao_interna(codigo):
     sala = salas_ativas.get(codigo)
     if not sala: return
 
-    sala['fase_atual'] = 'resultado'
-    sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
-    sala['confirmacoes_status'] = set()
+    sala['fase_atual'] = 'resultado'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
     
     votos = sala.get('votos', {})
     contagem = {}
     
     for eleitor, lista_votados in votos.items():
         if eleitor not in sala['impostores_atuais']:
-            for votado in lista_votados:
-                contagem[votado] = contagem.get(votado, 0) + 1
+            for votado in lista_votados: contagem[votado] = contagem.get(votado, 0) + 1
     
     max_votos = max(contagem.values()) if contagem else 0
     eliminados = [k for k, v in contagem.items() if v == max_votos] if max_votos > 0 else []
 
     foi_eliminado_de_fato = eliminados[0] if len(eliminados) == 1 else None
-    pontos_da_rodada = {}
-    detalhes_rodada = {}
+    pontos_da_rodada = {}; detalhes_rodada = {}
     
     for j in sala['jogadores']:
-        nome = j['nome']
-        eh_impostor = nome in sala['impostores_atuais']
-        votos_recebidos = contagem.get(nome, 0)
-        votos_dados = votos.get(nome, [])
+        nome = j['nome']; eh_impostor = nome in sala['impostores_atuais']
+        votos_recebidos = contagem.get(nome, 0); votos_dados = votos.get(nome, [])
         acertos_detetive = sum(1 for v in votos_dados if v in sala['impostores_atuais']) if not eh_impostor else 0
         
         pts = 0
@@ -537,28 +515,38 @@ def encerrar_votacao_interna(codigo):
     try: salvar_banco_dados(pontos_da_rodada, sala['placar'], sala['id_partida'], detalhes_rodada, sala['historico_impostores'], sala['palavras_usadas'], sala['acumulado_caos'], sala['acumulado_trapaca'])
     except Exception as e: print("Erro ao salvar no banco:", e)
 
-    impostores_resultado = [{'nome': imp, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == imp), "👤"), 'votos': contagem.get(imp, 0), 'fugiu': imp != foi_eliminado_de_fato} for imp in sala['impostores_atuais']]
-    outros_votados = [{'nome': nome, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == nome), "👤"), 'votos': qtd} for nome, qtd in sorted(contagem.items(), key=lambda x: x[1], reverse=True) if nome not in sala['impostores_atuais'] and qtd > 0]
+    # Novo Modelo Riquíssimo em Colunas para a TV
+    destaques_resultado = []
+    
+    # Adiciona os Impostores na TELA DE HONRA
+    for imp in sala['impostores_atuais']:
+        destaques_resultado.append({
+            'nome': imp,
+            'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == imp), "👤"),
+            'papel': 'Impostor',
+            'status': 'Foi pego!' if imp == foi_eliminado_de_fato else 'Conseguiu fugir!'
+        })
+        
+    # Adiciona o Inocente (se alguém de fora morreu)
+    if foi_eliminado_de_fato and foi_eliminado_de_fato not in sala['impostores_atuais']:
+        destaques_resultado.append({
+            'nome': foi_eliminado_de_fato,
+            'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == foi_eliminado_de_fato), "👤"),
+            'papel': 'Inocente',
+            'status': 'Foi executado!'
+        })
+
+    outros_votados = [{'nome': nome, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == nome), "👤"), 'votos': qtd} for nome, qtd in sorted(contagem.items(), key=lambda x: x[1], reverse=True) if nome not in sala['impostores_atuais'] and nome != foi_eliminado_de_fato and qtd > 0]
 
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
     socketio.start_background_task(monitorar_confirmacoes, codigo, 'resultado', sala['iteracao_fase'])
     
-    emit('resultado_votacao_host', {'impostores_resultado': impostores_resultado, 'outros_votados': outros_votados, 'palavra_atual': sala['palavra_atual'], 'pontos': sala['placar']}, to=sala['host_sid'])
-
-@socketio.on('voltar_para_lobby')
-def voltar_para_lobby(dados):
-    codigo = dados.get('codigo')
-    sala = salas_ativas.get(codigo)
-    if sala:
-        sala['fase_atual'] = 'lobby'
-        sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
-        sala['confirmacoes_status'] = set()
-        
-        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
-        
-        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
-        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
+    emit('resultado_votacao_host', {
+        'destaques': destaques_resultado,
+        'outros_votados': outros_votados,
+        'palavra_atual': sala['palavra_atual'],
+        'pontos': sala['placar']
+    }, to=sala['host_sid'])
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=8080)
