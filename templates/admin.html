@@ -10,12 +10,13 @@
         .container { margin: 40px auto; width: 90%; max-width: 900px; background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); box-sizing: border-box; position: relative;}
         button { padding: 14px 28px; font-size: 18px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; transition: 0.2s; }
         button:hover { filter: brightness(1.1); }
+        button:disabled { background-color: #555 !important; cursor: not-allowed; opacity: 0.5; }
         .codigo-gigante { font-size: 75px; letter-spacing: 12px; color: #f1c40f; font-weight: bold; margin: 15px 0; }
         .escondido { display: none !important; }
         
         .grid-config { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; background: #262626; padding: 20px; border-radius: 10px; margin-top: 20px; }
-        select, input[type="number"], input[type="range"] { width: 100%; border-radius: 6px; box-sizing: border-box; }
-        select, input[type="number"] { padding: 12px; font-size: 16px; background: #121212; color: white; border: 1px solid #444; }
+        select, input[type="number"], input[type="range"], input[type="text"] { width: 100%; border-radius: 6px; box-sizing: border-box; }
+        select, input[type="number"], input[type="text"] { padding: 12px; font-size: 16px; background: #121212; color: white; border: 1px solid #444; }
         
         .grid-jogadores { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 0; list-style: none; }
         .jogador-card { background: #2c2c2c; padding: 12px 15px; border-radius: 8px; font-size: 18px; border: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; }
@@ -29,6 +30,16 @@
         
         #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
         #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
+
+        /* Estilos do Emoji Picker e Modo Jogador para o Admin */
+        .emoji-opt-container { position: relative; display: inline-block; width: 48px; height: 48px; font-size: 32px; line-height: 48px; text-align: center; background: #222; border-radius: 8px; cursor: pointer; user-select: none; transition: 0.2s; }
+        .emoji-opt-container:active { background: #555; }
+        .emoji-opt-container.ocupado { opacity: 0.4; cursor: not-allowed; background: #111; }
+        .emoji-opt-container.selecionado { background: #2980b9; border: 2px solid #3498db; box-sizing: border-box; line-height: 44px; }
+        .nome-sobre-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4757; font-size: 11px; font-weight: 900; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8); pointer-events: none; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+        
+        .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; transition: background 0.1s; }
+        .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
 
         @media (max-width: 768px) {
             .container { margin: 20px auto; padding: 20px; width: 95%; }
@@ -58,19 +69,18 @@
 
     <div class="container escondido" id="painel-banco">
         <h1 style="color: #e74c3c; font-size: 30px;">⚙️ ADMINISTRAÇÃO DE DADOS</h1>
-        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis.</p>
+        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis e afetam o banco de dados principal.</p>
         
         <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras Usadas</button>
         <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Histórico de Partidas e Ranking</button>
         
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
-            <h3 style="color: #aaa; margin-bottom: 10px;">Excluir Jogador Específico do Banco de Dados</h3>
+            <h3 style="color: #aaa; margin-bottom: 10px;">Excluir Jogador Específico do Banco</h3>
             <input type="text" id="ipt-del-jogador" placeholder="Nome Exato do Jogador" style="width: 60%; display: inline-block;">
             <button onclick="deletarJogadorDB()" style="width: 35%; background-color: #8e44ad; padding: 12px; margin-top: 0; display: inline-block;">Apagar</button>
         </div>
 
-        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL (Factory Reset)</button>
-        
+        <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL</button>
         <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
     </div>
 
@@ -92,6 +102,13 @@
                 <label>Impostores Base:</label>
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="color: #3498db; font-weight: bold;">Modo de Jogo:</label>
+                <select id="cfg-modo-jogo" onchange="alternarModoJogo()" style="border-color: #3498db;">
+                    <option value="host">📺 Apenas Host (TV controla e exibe o jogo)</option>
+                    <option value="host_jogador">📱 Host + Jogador (A TV vai jogar e exibir o timer/resultados para todos)</option>
+                </select>
+            </div>
             <div>
                 <label>Tempo Interrogatório:</label>
                 <div class="timer-controle">
@@ -109,8 +126,38 @@
                 <input type="range" id="cfg-trapaca" value="20" min="0" max="100" step="5" oninput="document.getElementById('val-trapaca').innerText = this.value">
             </div>
         </div>
-        <button disabled id="btn-iniciar" style="background-color: #555;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
+
+        <div id="bloco-host-jogador" class="escondido" style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #3498db;">
+            <h3 style="color: #3498db; margin-top:0;">Você está jogando!</h3>
+            <input type="text" id="host-nome-input" placeholder="Digite seu Nome de Jogador para a TV" style="margin-bottom: 15px;">
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar da TV:</p>
+            <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
+            <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Participar na TV</button>
+        </div>
+
+        <button disabled id="btn-iniciar" style="background-color: #555; margin-top: 30px;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
     </div>
+
+    <!-- TELAS INTERNAS DO HOST QUANDO ELE É JOGADOR -->
+    <div id="host-painel-secreto" class="container escondido" style="border: 4px solid transparent;">
+        <h3 id="host-tema-display" style="color: #777; text-transform: uppercase; margin-top: 0; letter-spacing: 1px;">TEMA</h3>
+        <h2 id="host-papel-titulo" style="font-size: 26px; margin: 8px 0;">INOCENTE / IMPOSTOR</h2>
+        <div id="host-caos-alerta" class="escondido" style="color: #f1c40f; font-weight: bold; font-size: 13px; margin-bottom: 8px;">⚠️ ADVERTÊNCIA: CAOS ATIVO</div>
+        <div class="palavra-gigante" id="host-palavra-secreta" style="font-size: 50px;">----</div>
+        <p id="host-trapaca-alerta" class="escondido" style="color: #e67e22; font-weight: bold; font-size: 16px; background: #2c1a0a; padding: 10px; border-radius: 4px;">Cúmplices: <span id="host-equipe-nomes"></span></p>
+        <button onclick="ocultarTelaSecretaHost()" style="background-color: #333; margin-top: 20px;">Ocultar Informações</button>
+    </div>
+
+    <div id="host-painel-votacao-interna" class="container escondido" style="border: 2px solid #e74c3c;">
+        <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO DA TV</h2>
+        <div id="host-aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
+            ⚠️ <strong>Alerta:</strong> O Caos alterou a quantidade de Impostores!
+        </div>
+        <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;">A TV Seleciona <strong style="color:white" id="host-qtd-alvo">1</strong> suspeito(s):</p>
+        <div id="host-botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></div>
+        <button id="host-btn-submeter-voto" onclick="submeterVotoHost()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto da TV</button>
+    </div>
+    <!-- FIM DAS TELAS INTERNAS -->
 
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
@@ -147,7 +194,6 @@
     <div class="container escondido" id="painel-resultado">
         <h1 style="font-size: 45px; color: #e74c3c; margin-bottom: 5px;" id="titulo-revelacao">E o Impostor é...</h1>
         
-        <!-- Bloco Principal em Colunas Flex -->
         <div id="bloco-impostores-revelados" style="margin: 30px 0;"></div>
         
         <div id="bloco-outros-votados" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
@@ -173,8 +219,26 @@
         let codigo_atual = "";
         let cfgTempoGlobal = 120;
         let intervaloTimer = null;
+        let modoJogoAtual = 'host';
+        
+        // Variáveis do Host como Jogador
+        let souJogador = false;
+        let meuNomeHost = "";
+        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"];
+        let listaJogadoresCache = [];
+        let hostVotosSelecionados = [];
+        let hostMaxVotos = 1;
 
         window.onload = () => { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); };
+
+        socket.on('connect', () => {
+            if (codigo_atual) socket.emit('host_reconectou', { codigo: codigo_atual });
+        });
+
+        socket.on('sala_encerrada_por_inatividade', () => {
+            alert("O servidor foi suspenso por inatividade. Por favor, crie uma nova partida.");
+            location.reload();
+        });
 
         function criarSala() { socket.emit('criar_sala'); }
 
@@ -210,7 +274,36 @@
             }
         });
 
+        // --- SISTEMA HOST JOGADOR (Lobby e Emojis) ---
+        function alternarModoJogo() {
+            modoJogoAtual = document.getElementById('cfg-modo-jogo').value;
+            if (modoJogoAtual === 'host_jogador') {
+                document.getElementById('bloco-host-jogador').classList.remove('escondido');
+                renderizarGradeEmojisHost();
+            } else {
+                document.getElementById('bloco-host-jogador').classList.add('escondido');
+            }
+            validarBotaoIniciar();
+        }
+
+        function entrarHostComoJogador() {
+            meuNomeHost = document.getElementById('host-nome-input').value.trim();
+            if (meuNomeHost && codigo_atual) {
+                socket.emit('entrar_na_sala', { nome: meuNomeHost, codigo: codigo_atual });
+            }
+        }
+
+        socket.on('entrada_sucesso', (dados) => {
+            if (dados.nome === meuNomeHost) {
+                souJogador = true;
+                document.getElementById('host-nome-input').disabled = true;
+                document.getElementById('btn-entrar-host').classList.add('escondido');
+                validarBotaoIniciar();
+            }
+        });
+
         socket.on('lista_jogadores_atualizada', (dados) => {
+            listaJogadoresCache = dados.jogadores;
             const ul = document.getElementById('lista-jogadores');
             ul.innerHTML = '';
             dados.jogadores.forEach(j => {
@@ -220,22 +313,59 @@
                 </li>`;
             });
             document.getElementById('contagem').innerText = dados.jogadores.length;
-            
-            const btn = document.getElementById('btn-iniciar');
-            if (dados.jogadores.length >= 3) {
-                btn.disabled = false;
-                btn.style.backgroundColor = '#8e44ad';
-                btn.innerText = "Iniciar Rodada";
-            } else {
-                btn.disabled = true;
-                btn.style.backgroundColor = '#555';
-                btn.innerText = "Aguardando Jogadores...";
-            }
+            renderizarGradeEmojisHost();
+            validarBotaoIniciar();
         });
+
+        function validarBotaoIniciar() {
+            const btn = document.getElementById('btn-iniciar');
+            let podeIniciar = listaJogadoresCache.length >= 3;
+            if (modoJogoAtual === 'host_jogador' && !souJogador) podeIniciar = false;
+            
+            btn.disabled = !podeIniciar;
+            btn.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555';
+            btn.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+        }
+
+        function renderizarGradeEmojisHost() {
+            if (modoJogoAtual !== 'host_jogador') return;
+            const grade = document.getElementById('host-grade-emojis');
+            if(!grade) return;
+            grade.innerHTML = '';
+
+            TODOS_EMOJIS.forEach(emoji => {
+                const container = document.createElement('div');
+                container.className = 'emoji-opt-container';
+                const dono = listaJogadoresCache.find(j => j.emoji === emoji);
+
+                if (dono) {
+                    if (dono.nome === meuNomeHost) {
+                        container.classList.add('selecionado');
+                        container.innerText = emoji;
+                    } else {
+                        container.classList.add('ocupado');
+                        container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`;
+                    }
+                } else {
+                    container.innerText = emoji;
+                    container.onclick = () => { 
+                        if (souJogador) socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meuNomeHost, emoji: emoji}); 
+                    };
+                }
+                grade.appendChild(container);
+            });
+        }
+        // ----------------------------------------------
 
         function expulsar(nomeJogador) {
             if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
                 socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
+                if (nomeJogador === meuNomeHost) {
+                    souJogador = false; meuNomeHost = "";
+                    document.getElementById('host-nome-input').disabled = false; document.getElementById('host-nome-input').value = "";
+                    document.getElementById('btn-entrar-host').classList.remove('escondido');
+                    validarBotaoIniciar();
+                }
             }
         }
 
@@ -248,6 +378,7 @@
         function iniciarPartida() {
             socket.emit('iniciar_partida', {
                 codigo: codigo_atual,
+                modo_jogo: modoJogoAtual,
                 categoria: document.getElementById('cfg-tema').value,
                 imp_base: document.getElementById('cfg-imp').value,
                 caos: document.getElementById('cfg-caos').value,
@@ -256,13 +387,103 @@
             });
         }
 
+        // --- SISTEMA HOST JOGADOR (Telas do Jogo) ---
+        socket.on('distribuir_papeis', (dados) => {
+            if (modoJogoAtual === 'host_jogador' && souJogador) {
+                document.getElementById('painel-lobby').classList.add('escondido');
+                document.getElementById('painel-jogo').classList.add('escondido');
+                document.getElementById('host-painel-secreto').classList.remove('escondido');
+                
+                document.getElementById('host-tema-display').innerText = dados.tema;
+                document.getElementById('host-palavra-secreta').innerText = dados.palavra_ou_dica;
+                
+                if (dados.caos_ativo) document.getElementById('host-caos-alerta').classList.remove('escondido');
+                else document.getElementById('host-caos-alerta').classList.add('escondido');
+
+                const painelSec = document.getElementById('host-painel-secreto');
+                if (dados.papel === 'impostor') {
+                    painelSec.style.borderColor = "#e74c3c";
+                    document.getElementById('host-papel-titulo').innerText = "VOCÊ É O IMPOSTOR";
+                    document.getElementById('host-papel-titulo').style.color = "#e74c3c";
+                    if (dados.equipe && dados.equipe.length > 0) {
+                        document.getElementById('host-trapaca-alerta').classList.remove('escondido');
+                        document.getElementById('host-equipe-nomes').innerText = dados.equipe.join(', ');
+                    } else { document.getElementById('host-trapaca-alerta').classList.add('escondido'); }
+                } else {
+                    painelSec.style.borderColor = "#2ecc71";
+                    document.getElementById('host-papel-titulo').innerText = "VOCÊ É INOCENTE";
+                    document.getElementById('host-papel-titulo').style.color = "#2ecc71";
+                    document.getElementById('host-trapaca-alerta').classList.add('escondido');
+                }
+            }
+        });
+
+        function ocultarTelaSecretaHost() {
+            document.getElementById('host-painel-secreto').classList.add('escondido');
+            document.getElementById('painel-jogo').classList.remove('escondido');
+            socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meuNomeHost });
+        }
+
+        socket.on('ir_para_tela_votacao', (dados) => {
+            if (modoJogoAtual === 'host_jogador' && souJogador) {
+                document.getElementById('painel-jogo').classList.add('escondido');
+                document.getElementById('host-painel-votacao-interna').classList.remove('escondido');
+                
+                hostVotosSelecionados = [];
+                hostMaxVotos = dados.qtd_votos || 1;
+                document.getElementById('host-qtd-alvo').innerText = hostMaxVotos;
+                document.getElementById('host-btn-submeter-voto').disabled = true;
+
+                if(dados.caos_geral) document.getElementById('host-aviso-caos-votacao').classList.remove('escondido');
+                else document.getElementById('host-aviso-caos-votacao').classList.add('escondido');
+
+                const divBotoes = document.getElementById('host-botoes-votacao');
+                divBotoes.innerHTML = '';
+
+                dados.jogadores.forEach(j => {
+                    if(j.nome !== meuNomeHost) {
+                        const btn = document.createElement('button');
+                        btn.className = 'voto-btn';
+                        btn.innerText = `${j.emoji} ${j.nome}`;
+                        btn.style.width = "auto";
+                        btn.style.padding = "10px 15px";
+                        btn.onclick = () => alternarVotoHost(btn, j.nome);
+                        divBotoes.appendChild(btn);
+                    }
+                });
+            }
+        });
+
+        function alternarVotoHost(btn, nome) {
+            if (hostVotosSelecionados.includes(nome)) {
+                hostVotosSelecionados = hostVotosSelecionados.filter(n => n !== nome);
+                btn.classList.remove('selecionado');
+            } else {
+                if (hostVotosSelecionados.length < hostMaxVotos) {
+                    hostVotosSelecionados.push(nome);
+                    btn.classList.add('selecionado');
+                }
+            }
+            document.getElementById('host-btn-submeter-voto').disabled = (hostVotosSelecionados.length !== hostMaxVotos);
+        }
+
+        function submeterVotoHost() {
+            if (hostVotosSelecionados.length === hostMaxVotos) {
+                socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
+                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
+                document.getElementById('painel-votacao').classList.remove('escondido');
+            }
+        }
+        // --------------------------------------------
+
         socket.on('partida_iniciada_host', (dados) => {
             clearInterval(intervaloTimer);
-            document.getElementById('painel-lobby').classList.add('escondido');
-            document.getElementById('painel-jogo').classList.remove('escondido');
+            if (modoJogoAtual === 'host') {
+                document.getElementById('painel-lobby').classList.add('escondido');
+                document.getElementById('painel-jogo').classList.remove('escondido');
+            }
             document.getElementById('bloco-timer').classList.add('escondido');
             document.getElementById('bloco-aguardando').classList.remove('escondido');
-            
             document.getElementById('primeiro-falar').innerText = dados.primeiro;
             document.getElementById('leitura-contagem').innerText = "0";
             document.getElementById('leitura-total').innerText = dados.total_jogadores;
@@ -295,29 +516,22 @@
             intervaloTimer = setInterval(() => {
                 tempoRestante--;
                 display.innerText = tempoRestante + "s";
-                
                 let pct = ((tempoTotal - tempoRestante) / tempoTotal) * 100;
                 ampFill.style.width = pct + '%';
                 
-                if(tempoRestante <= 0) {
-                    clearInterval(intervaloTimer);
-                    irParaVotacao();
-                }
+                if(tempoRestante <= 0) { clearInterval(intervaloTimer); irParaVotacao(); }
             }, 1000);
         });
 
-        function pularTimer() {
-            clearInterval(intervaloTimer);
-            irParaVotacao();
-        }
+        function pularTimer() { clearInterval(intervaloTimer); irParaVotacao(); }
 
-        function irParaVotacao() { 
-            socket.emit('iniciar_votacao', { codigo: codigo_atual }); 
-        }
+        function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
         socket.on('votacao_iniciada_host', (dados) => {
-            document.getElementById('painel-jogo').classList.add('escondido');
-            document.getElementById('painel-votacao').classList.remove('escondido');
+            if (modoJogoAtual === 'host') {
+                document.getElementById('painel-jogo').classList.add('escondido');
+                document.getElementById('painel-votacao').classList.remove('escondido');
+            }
             document.getElementById('votos-contagem').innerText = "0";
             if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
         });
@@ -328,17 +542,15 @@
         });
 
         socket.on('resultado_votacao_host', (dados) => {
-            document.getElementById('painel-votacao').classList.add('escondido');
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
             document.getElementById('painel-suspense').classList.remove('escondido');
             
             let count = 3;
             document.getElementById('contagem-regressiva').innerText = count;
-            
             let interval = setInterval(() => {
                 count--;
-                if(count > 0) {
-                    document.getElementById('contagem-regressiva').innerText = count;
-                } else {
+                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } 
+                else {
                     clearInterval(interval);
                     document.getElementById('painel-suspense').classList.add('escondido');
                     mostrarResultadoFinal(dados);
@@ -348,27 +560,21 @@
 
         function mostrarResultadoFinal(dados) {
             document.getElementById('painel-resultado').classList.remove('escondido');
-            
             const titulo = document.getElementById('titulo-revelacao');
             titulo.innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
             
             const blocoImps = document.getElementById('bloco-impostores-revelados');
-            
-            // Design Riquíssimo em Colunas!
             let containerHtml = '<div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">';
-            
             dados.destaques.forEach(d => {
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
                 let corStatus = d.status.includes('pego') || d.status.includes('executado') ? '#e74c3c' : '#2ecc71';
-                
                 containerHtml += `
                     <div style="text-align: center; background: #222; padding: 20px; border-radius: 12px; border: 2px solid ${corPapel}; min-width: 180px;">
                         <div style="font-size: 80px; margin: 0; line-height: 1;">${d.emoji}</div>
                         <div style="font-size: 28px; font-weight: bold; color: white; margin-top: 10px;">${d.nome}</div>
                         <div style="font-size: 20px; color: ${corPapel}; font-weight: bold; text-transform: uppercase;">${d.papel}</div>
                         <div style="font-size: 18px; color: ${corStatus}; margin-top: 5px; font-weight: bold;">${d.status}</div>
-                    </div>
-                `;
+                    </div>`;
             });
             containerHtml += '</div>';
             blocoImps.innerHTML = containerHtml;
@@ -379,12 +585,8 @@
             
             if (dados.outros_votados.length > 0) {
                 blocoOutros.style.display = 'block';
-                dados.outros_votados.forEach(out => {
-                    listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`;
-                });
-            } else {
-                blocoOutros.style.display = 'none';
-            }
+                dados.outros_votados.forEach(out => { listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`; });
+            } else { blocoOutros.style.display = 'none'; }
 
             document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
             
@@ -395,16 +597,24 @@
             }
         }
 
-        function voltarAoLobby() {
-            socket.emit('voltar_para_lobby', { codigo: codigo_atual });
-            document.getElementById('painel-resultado').classList.add('escondido');
-            document.getElementById('painel-lobby').classList.remove('escondido');
-        }
+        function voltarAoLobby() { socket.emit('voltar_para_lobby', { codigo: codigo_atual }); }
 
-        // Funções DB Extras
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
-        socket.on('receber_coroacao', (dados) => { /*...*/ });
-        function fecharCoroacao() { /*...*/ }
+        socket.on('receber_coroacao', (dados) => {
+            document.getElementById('painel-inicio').classList.add('escondido');
+            const painel = document.getElementById('painel-coroacao');
+            painel.classList.remove('escondido');
+            document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
+            const div = document.getElementById('coroacao-conteudo');
+            div.innerHTML = '';
+            if(dados.ranking.length === 0) { div.innerHTML = "<p>Nenhum dado registrado para este período.</p>"; return; }
+            dados.ranking.forEach((pos, idx) => {
+                let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
+                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
+            });
+        });
+
+        function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
         function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
