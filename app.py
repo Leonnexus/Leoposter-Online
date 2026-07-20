@@ -22,7 +22,14 @@ if DATABASE_URL.startswith("postgres://"):
 
 engine = create_engine(DATABASE_URL, poolclass=NullPool)
 
-EMOJIS_DISPONIVEIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"]
+# BANCO DE EMOJIS EXPANDIDO PARA 50 OPÇÕES
+EMOJIS_DISPONIVEIS = [
+    "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", 
+    "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", 
+    "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝", 
+    "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊", 
+    "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"
+]
 
 def obter_ranking_dinamico(tipo):
     try:
@@ -504,11 +511,9 @@ def encerrar_votacao_interna(codigo):
     # NOVA ENGINE DE VOTAÇÃO: 50% OU MAIS DOS VOTOS VÁLIDOS
     votos = sala.get('votos', {})
     
-    # Eleitores válidos são os que não são impostores
     eleitores_validos = [e for e in votos.keys() if e not in sala['impostores_atuais']]
     votos_validos_total = len(eleitores_validos)
     
-    # Limite para ser pego: Metade ou mais dos eleitores válidos
     limite_para_pegar = max(1, votos_validos_total / 2.0)
     
     contagem = {}
@@ -516,7 +521,6 @@ def encerrar_votacao_interna(codigo):
         for votado in votos[eleitor]:
             contagem[votado] = contagem.get(votado, 0) + 1
             
-    # Quem foi efetivamente eliminado na mesa? (Recebeu >= metade)
     eliminados_de_fato = [k for k, v in contagem.items() if v >= limite_para_pegar]
 
     pontos_da_rodada = {}; detalhes_rodada = {}
@@ -527,7 +531,7 @@ def encerrar_votacao_interna(codigo):
         
         pts = 0
         if eh_impostor:
-            if nome not in eliminados_de_fato: pts = 2 # Pontua se fugir da forca
+            if nome not in eliminados_de_fato: pts = 2 
         else:
             if acertos_detetive > 0: pts = acertos_detetive
             
@@ -539,14 +543,12 @@ def encerrar_votacao_interna(codigo):
     except Exception as e: print("Erro ao salvar no banco:", e)
 
     destaques_resultado = []
-    # Os Impostores vão pro palco
     for imp in sala['impostores_atuais']:
         destaques_resultado.append({
             'nome': imp, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == imp), "👤"),
             'papel': 'Impostor', 'status': 'Foi pego!' if imp in eliminados_de_fato else 'Conseguiu fugir!'
         })
     
-    # Inocentes que rodaram por engano também vão pro palco
     for elim in eliminados_de_fato:
         if elim not in sala['impostores_atuais']:
             destaques_resultado.append({
