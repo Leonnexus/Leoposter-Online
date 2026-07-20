@@ -74,7 +74,7 @@
         
         <p style="color: #666; margin-bottom: 0;" id="subtitulo">Sua Informação Secreta:</p>
         <div class="palavra-gigante" id="palavra-secreta">----</div>
-        <p id="trapaca-alerta" class="escondido" style="color: #e67e22; font-weight: bold; font-size: 13px; background: #2c1a0a; padding: 8px; border-radius: 4px;">Cúmplices: <span id="equipe-nomes"></span></p>
+        <p id="trapaca-alerta" class="escondido" style="color: #e67e22; font-weight: bold; font-size: 13px; background: #2c1a0a; padding: 8px; border-radius: 4px;" class="escondido">Cúmplices: <span id="equipe-nomes"></span></p>
         
         <button onclick="esconderTela()" style="background-color: #333; margin-top: 15px;">Ocultar Informações</button>
         <button class="btn-ja-foi" onclick="clicouJaFoi()">Palavra Repetida (Já foi!)</button>
@@ -127,7 +127,13 @@
         let meu_nome_atual = "";
         let codigo_atual = "";
         
-        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"];
+        const TODOS_EMOJIS = [
+            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", 
+            "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", 
+            "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝", 
+            "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊", 
+            "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"
+        ];
         let listaJogadoresCache = [];
         
         let votos_selecionados = [];
@@ -195,6 +201,7 @@
             const grade = document.getElementById('grade-emojis');
             if(!grade) return;
             grade.innerHTML = '';
+
             const meuJogador = listaJogadoresCache.find(j => j.nome === meu_nome_atual);
             if (meuJogador) document.getElementById('meu-emoji-display').innerText = meuJogador.emoji;
 
