@@ -126,6 +126,12 @@
         let meu_nome_atual = "";
         let codigo_atual = "";
         
+        // IDENTIFICADOR DE TESTE: Isola o armazenamento se estiver no Modo Desenvolvedor
+        const urlParams = new URLSearchParams(window.location.search);
+        const testId = urlParams.get('test_id') ? '_' + urlParams.get('test_id') : '';
+        const KEY_NOME = 'leoposter_nome' + testId;
+        const KEY_CODIGO = 'leoposter_codigo' + testId;
+
         const TODOS_EMOJIS = [
             "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", 
             "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", 
@@ -138,14 +144,12 @@
         let votos_selecionados = [];
         let max_votos_permitidos = 1;
         let celIntervaloTimer = null;
-        
-        // Travas de Memória de Renderização
         let jogador_papel_oculto = false;
         let jogadorFaseVotacaoRenderizada = false;
 
         window.onload = () => {
-            const nomeSalvo = localStorage.getItem('leoposter_nome');
-            const codigoSalvo = localStorage.getItem('leoposter_codigo');
+            const nomeSalvo = localStorage.getItem(KEY_NOME);
+            const codigoSalvo = localStorage.getItem(KEY_CODIGO);
             if (nomeSalvo && codigoSalvo) {
                 document.getElementById('ipt-nome').value = nomeSalvo;
                 document.getElementById('ipt-codigo').value = codigoSalvo;
@@ -159,8 +163,8 @@
             meu_nome_atual = document.getElementById('ipt-nome').value.trim();
             codigo_atual = document.getElementById('ipt-codigo').value.trim().toUpperCase();
             if(meu_nome_atual && codigo_atual) {
-                localStorage.setItem('leoposter_nome', meu_nome_atual);
-                localStorage.setItem('leoposter_codigo', codigo_atual);
+                localStorage.setItem(KEY_NOME, meu_nome_atual);
+                localStorage.setItem(KEY_CODIGO, codigo_atual);
                 socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual });
             }
         }
@@ -168,23 +172,26 @@
         function sairDaSala() {
             if(confirm("Deseja realmente sair da sala? Você voltará ao menu principal.")) {
                 socket.emit('sair_da_sala', { codigo: codigo_atual, nome: meu_nome_atual });
-                localStorage.removeItem('leoposter_nome');
-                localStorage.removeItem('leoposter_codigo');
+                localStorage.removeItem(KEY_NOME);
+                localStorage.removeItem(KEY_CODIGO);
                 location.reload();
             }
         }
 
         socket.on('erro_conexao', (dados) => {
             alert(dados.mensagem);
-            localStorage.removeItem('leoposter_nome');
-            localStorage.removeItem('leoposter_codigo');
+            localStorage.removeItem(KEY_NOME);
+            localStorage.removeItem(KEY_CODIGO);
             document.getElementById('ipt-codigo').value = '';
             document.getElementById('btn-sair-sala').classList.add('escondido');
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-login').classList.remove('escondido');
         });
 
-        socket.on('foi_expulso', () => { localStorage.clear(); alert("Você foi removido da sala pelo Host principal."); location.reload(); });
+        socket.on('foi_expulso', () => { 
+            localStorage.removeItem(KEY_NOME); localStorage.removeItem(KEY_CODIGO); 
+            alert("Você foi removido da sala pelo Host principal."); location.reload(); 
+        });
 
         socket.on('entrada_sucesso', (dados) => {
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
@@ -238,7 +245,6 @@
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
-            // DESTRAVA A TELA CASO A PALAVRA SEJA PULADA
             if (!dados.ja_confirmou) { jogador_papel_oculto = false; }
             if (jogador_papel_oculto) return;
 
