@@ -31,7 +31,6 @@
         #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
         #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
 
-        /* Estilos do Emoji Picker e Modo Jogador para o Admin */
         .emoji-opt-container { position: relative; display: inline-block; width: 48px; height: 48px; font-size: 32px; line-height: 48px; text-align: center; background: #222; border-radius: 8px; cursor: pointer; user-select: none; transition: 0.2s; }
         .emoji-opt-container:active { background: #555; }
         .emoji-opt-container.ocupado { opacity: 0.4; cursor: not-allowed; background: #111; }
@@ -41,7 +40,6 @@
         .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; transition: background 0.1s; }
         .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
 
-        /* Estilos do Slider/Switch */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; margin: 0 15px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; }
@@ -51,12 +49,12 @@
         .slider.round { border-radius: 34px; }
         .slider.round:before { border-radius: 50%; }
 
-        /* ABA DESLIZANTE PARA O HOST JOGADOR */
         #slide-overlay {
             position: fixed; top: 0; right: -100vw; width: 100vw; height: 100vh;
             background: #1e1e1e; z-index: 9999; transition: right 0.3s ease-out;
             display: flex; box-shadow: -5px 0 15px rgba(0,0,0,0.8);
         }
+        #slide-overlay.inativo { display: none !important; }
         #slide-handle {
             position: absolute; left: -40px; top: 50%; transform: translateY(-50%);
             width: 40px; height: 140px; background: #3498db; color: white;
@@ -128,16 +126,15 @@
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
             
-            <!-- CONTROLE DE MODO DE JOGO VIA SLIDER -->
             <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;">
-                <label style="margin-bottom: 10px; color: white;">Como a TV irá se comportar?</label>
+                <label style="margin-bottom: 10px; color: white;">Como o painel irá se comportar?</label>
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                    <span style="font-weight: bold; color: #aaa;" id="lbl-modo-host">Apenas TV</span>
+                    <span style="font-weight: bold; color: #3498db;" id="lbl-modo-host">Apenas Host</span>
                     <label class="switch">
                         <input type="checkbox" id="cfg-modo-jogo-toggle" onchange="alternarModoJogo()">
                         <span class="slider round"></span>
                     </label>
-                    <span style="font-weight: bold; color: #555;" id="lbl-modo-jogador">TV + Jogador</span>
+                    <span style="font-weight: bold; color: #555;" id="lbl-modo-jogador">Host + Jogador</span>
                 </div>
             </div>
 
@@ -159,23 +156,28 @@
             </div>
         </div>
 
-        <div id="bloco-host-jogador" class="escondido" style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #3498db;">
-            <h3 style="color: #3498db; margin-top:0;">Criar o Perfil da TV</h3>
-            <input type="text" id="host-nome-input" placeholder="Seu Nome de Jogador" style="margin-bottom: 15px;">
-            <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize o Avatar da TV:</p>
-            <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 150px; overflow-y: auto;"></div>
-            <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Confirmar Participação</button>
-        </div>
-
         <button disabled id="btn-iniciar" style="background-color: #555; margin-top: 30px;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
     </div>
 
     <!-- PAINEL GAVETA (TELA SECRETA DO HOST JOGADOR) -->
-    <div id="slide-overlay">
+    <div id="slide-overlay" class="inativo">
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
         <div id="slide-content">
-            <h1 style="color: #fff; margin-top: 50px;">Área Restrita</h1>
-            <p style="color: #aaa;">Arraste a tela de volta para a direita para retornar ao controle da TV.</p>
+            <button onclick="closeSlide()" style="background-color: #555; margin-bottom: 20px; width: auto; padding: 10px 20px; font-size: 14px; border-radius: 6px;">⬅ Voltar para o Painel Principal</button>
+            
+            <div id="bloco-host-jogador" style="margin-top: 20px; padding: 20px; background: #222; border-radius: 12px; border: 2px solid #3498db;">
+                <h3 style="color: #3498db; margin-top:0;">Criar o Perfil do Host</h3>
+                <input type="text" id="host-nome-input" placeholder="Digite seu Nome de Jogador" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+                <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar:</p>
+                <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto;"></div>
+                <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9; margin-top: 15px;">Confirmar Participação</button>
+            </div>
+
+            <div id="host-painel-espera" class="container escondido" style="border: 2px solid #555; width: 100%; box-sizing: border-box; margin: 30px 0; padding: 40px;">
+                <h1 style="font-size: 60px; margin: 0;">⏳</h1>
+                <h2>Aguardando Partida</h2>
+                <p style="color: #aaa;">Você já está na sala. Aguarde o início do jogo para ver seu papel.</p>
+            </div>
             
             <div id="host-painel-secreto" class="container escondido" style="border: 4px solid transparent; width: 100%; box-sizing: border-box; margin: 30px 0;">
                 <h3 id="host-tema-display" style="color: #777; text-transform: uppercase; margin-top: 0; letter-spacing: 1px;">TEMA</h3>
@@ -187,19 +189,19 @@
             </div>
 
             <div id="host-painel-votacao-interna" class="container escondido" style="border: 2px solid #e74c3c; width: 100%; box-sizing: border-box; margin: 30px 0;">
-                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO DA TV</h2>
+                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO DO HOST</h2>
                 <div id="host-aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
                     ⚠️ O Caos alterou a quantidade de Impostores!
                 </div>
-                <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;">A TV Seleciona <strong style="color:white" id="host-qtd-alvo">1</strong> suspeito(s):</p>
+                <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;">Você seleciona <strong style="color:white" id="host-qtd-alvo">1</strong> suspeito(s):</p>
                 <div id="host-botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></div>
-                <button id="host-btn-submeter-voto" onclick="submeterVotoHost()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto da TV</button>
+                <button id="host-btn-submeter-voto" onclick="submeterVotoHost()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto</button>
             </div>
             
             <div id="host-painel-cadeado" class="container escondido" style="border: 2px solid #555; width: 100%; box-sizing: border-box; margin: 30px 0; padding: 40px;">
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
-                <h2>Informações Ocultas</h2>
-                <p style="color: #aaa;">As informações do Host estão protegidas.</p>
+                <h2>Área Restrita</h2>
+                <p style="color: #aaa;">Arraste a tela para a direita ou clique em Voltar para retornar ao painel principal.</p>
             </div>
         </div>
     </div>
@@ -247,7 +249,7 @@
         <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
-        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Voltar ao Menu Inicial e Avançar</button>
+        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Avançar para Próxima Rodada</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -270,7 +272,6 @@
         let hostVotosSelecionados = [];
         let hostMaxVotos = 1;
 
-        // Travas de Renderização para corrigir Glitches
         let host_papel_oculto = false;
         let hostFaseVotacaoRenderizada = false;
 
@@ -284,8 +285,7 @@
         function fecharLobby() {
             document.getElementById('painel-lobby').classList.add('escondido');
             document.getElementById('painel-inicio').classList.remove('escondido');
-            souJogador = false;
-            meuNomeHost = "";
+            souJogador = false; meuNomeHost = "";
         }
         
         function forcarLobby() {
@@ -314,7 +314,7 @@
             if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
         });
 
-        // --- ABA DESLIZANTE DO HOST (LOGICA DE GAVETA E SWIPE) ---
+        // --- ABA DESLIZANTE DO HOST ---
         let slideOverlay = document.getElementById('slide-overlay');
         let slideIsOpen = false;
         let startX = 0;
@@ -325,7 +325,7 @@
 
         document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.addEventListener('touchend', e => {
-            if (!souJogador || modoJogoAtual !== 'host_jogador') return;
+            if (modoJogoAtual !== 'host_jogador') return;
             let diff = e.changedTouches[0].clientX - startX;
             if (!slideIsOpen && diff < -60 && startX > window.innerWidth - 80) openSlide();
             if (slideIsOpen && diff > 60) closeSlide();
@@ -340,13 +340,14 @@
             document.getElementById('lbl-modo-jogador').style.color = toggle ? '#3498db' : '#555';
 
             if (modoJogoAtual === 'host_jogador') {
+                document.getElementById('slide-overlay').classList.remove('inativo');
                 document.getElementById('bloco-host-jogador').classList.remove('escondido');
                 renderizarGradeEmojisHost();
+                if(!souJogador) openSlide();
             } else {
-                document.getElementById('bloco-host-jogador').classList.add('escondido');
-                if(souJogador) {
-                    socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost });
-                }
+                document.getElementById('slide-overlay').classList.add('inativo');
+                closeSlide();
+                if(souJogador) socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost });
             }
             validarBotaoIniciar();
         }
@@ -361,8 +362,8 @@
         socket.on('entrada_sucesso', (dados) => {
             if (dados.nome === meuNomeHost) {
                 souJogador = true;
-                document.getElementById('host-nome-input').disabled = true;
-                document.getElementById('btn-entrar-host').classList.add('escondido');
+                document.getElementById('bloco-host-jogador').classList.add('escondido');
+                document.getElementById('host-painel-espera').classList.remove('escondido');
                 validarBotaoIniciar();
             }
         });
@@ -420,15 +421,15 @@
                 grade.appendChild(container);
             });
         }
-        // ----------------------------------------------
 
         function expulsar(nomeJogador) {
             if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
                 socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
                 if (nomeJogador === meuNomeHost) {
                     souJogador = false; meuNomeHost = "";
+                    document.getElementById('host-painel-espera').classList.add('escondido');
                     document.getElementById('host-nome-input').disabled = false; document.getElementById('host-nome-input').value = "";
-                    document.getElementById('btn-entrar-host').classList.remove('escondido');
+                    document.getElementById('bloco-host-jogador').classList.remove('escondido');
                     validarBotaoIniciar();
                 }
             }
@@ -443,6 +444,7 @@
         function iniciarPartida() {
             host_papel_oculto = false;
             hostFaseVotacaoRenderizada = false;
+            document.getElementById('host-painel-espera').classList.add('escondido');
             socket.emit('iniciar_partida', {
                 codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value,
                 imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value,
@@ -453,7 +455,7 @@
         // --- TELAS INTERNAS DO GAVETÃO (HOST/JOGADOR) ---
         socket.on('distribuir_papeis', (dados) => {
             if (modoJogoAtual === 'host_jogador' && souJogador) {
-                if (host_papel_oculto) return; // Trava contra o Glitch de re-renderização
+                if (host_papel_oculto) return; 
 
                 document.getElementById('host-painel-cadeado').classList.add('escondido');
                 document.getElementById('host-painel-votacao-interna').classList.add('escondido');
@@ -493,7 +495,7 @@
 
         socket.on('ir_para_tela_votacao', (dados) => {
             if (modoJogoAtual === 'host_jogador' && souJogador) {
-                if (hostFaseVotacaoRenderizada) return; // Trava a memória dos botões
+                if (hostFaseVotacaoRenderizada) return;
                 hostFaseVotacaoRenderizada = true;
 
                 document.getElementById('host-painel-cadeado').classList.add('escondido');
@@ -545,13 +547,13 @@
                 closeSlide();
             }
         }
-        // --------------------------------------------
 
         socket.on('partida_iniciada_host', (dados) => {
             clearInterval(intervaloTimer);
-            document.getElementById('painel-lobby').classList.add('escondido');
-            document.getElementById('painel-jogo').classList.remove('escondido');
-            
+            if (modoJogoAtual === 'host') {
+                document.getElementById('painel-lobby').classList.add('escondido');
+                document.getElementById('painel-jogo').classList.remove('escondido');
+            }
             document.getElementById('bloco-timer').classList.add('escondido');
             document.getElementById('bloco-aguardando').classList.remove('escondido');
             document.getElementById('primeiro-falar').innerText = dados.primeiro;
@@ -598,12 +600,14 @@
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
         socket.on('votacao_iniciada_host', (dados) => {
-            document.getElementById('painel-jogo').classList.add('escondido');
-            document.getElementById('painel-votacao').classList.remove('escondido');
+            if (modoJogoAtual === 'host') {
+                document.getElementById('painel-jogo').classList.add('escondido');
+                document.getElementById('painel-votacao').classList.remove('escondido');
+            }
             document.getElementById('votos-contagem').innerText = "0";
             if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
             
-            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
+            if(souJogador && modoJogoAtual === 'host_jogador') openSlide();
         });
 
         socket.on('voto_recebido_host', (dados) => {
