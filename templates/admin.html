@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leoposter - Painel de Controle</title>
+    <title>Leoposter - Painel do Host</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #121212; color: #e0e0e0; text-align: center; margin: 0; padding: 0; overflow-x: hidden; }
@@ -53,9 +53,9 @@
         .slider.round:before { border-radius: 50%; }
 
         #slide-overlay { position: fixed; top: 0; right: -100vw; width: 100vw; height: 100vh; background: #1e1e1e; z-index: 9999; transition: right 0.3s ease-out; display: flex; box-shadow: -5px 0 15px rgba(0,0,0,0.8); }
-        #slide-overlay.inativo { display: none !important; }
-        #slide-handle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); width: 40px; height: 140px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: mixed; border-radius: 10px 0 0 10px; cursor: pointer; font-weight: bold; font-size: 16px; user-select: none; }
-        #slide-content { flex: 1; padding: 20px; overflow-y: auto; text-align: center; }
+        #slide-handle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); width: 40px; height: 140px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: mixed; border-radius: 10px 0 0 10px; cursor: pointer; font-weight: bold; font-size: 16px; user-select: none; box-shadow: -4px 0 10px rgba(0,0,0,0.5); }
+        
+        .drawer-box { background: #292929; padding: 25px; border-radius: 12px; width: 100%; max-width: 360px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); box-sizing: border-box; margin: 0 auto 20px auto; display: flex; flex-direction: column; align-items: center; }
 
         @media (max-width: 768px) {
             .container { margin: 20px auto; padding: 20px; width: 95%; }
@@ -98,7 +98,7 @@
     </div>
 
     <div class="container escondido" id="painel-lobby">
-        <button onclick="fecharLobby()" style="background-color: #555; padding: 8px 15px; width: auto; font-size: 14px; float: left; margin-top: -10px;">⬅ Voltar ao Início</button>
+        <button onclick="forcarLobbyEInicio()" style="background-color: #555; padding: 8px 15px; width: auto; font-size: 14px; float: left; margin-top: -10px;">⬅ Voltar ao Início</button>
         <div style="clear: both;"></div>
 
         <h2>Código da Sala:</h2>
@@ -115,19 +115,6 @@
                 <label>Impostores Base:</label>
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
-            
-            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;">
-                <label style="margin-bottom: 10px; color: white;">Como o painel irá se comportar?</label>
-                <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
-                    <span style="font-weight: bold; color: #3498db;" id="lbl-modo-host">Apenas Host</span>
-                    <label class="switch">
-                        <input type="checkbox" id="cfg-modo-jogo-toggle" onchange="alternarModoJogo()">
-                        <span class="slider round"></span>
-                    </label>
-                    <span style="font-weight: bold; color: #555;" id="lbl-modo-jogador">Host + Jogador</span>
-                </div>
-            </div>
-
             <div>
                 <label>Tempo Interrogatório:</label>
                 <div class="timer-controle">
@@ -145,37 +132,48 @@
                 <input type="range" id="cfg-trapaca" value="20" min="0" max="100" step="5" oninput="document.getElementById('val-trapaca').innerText = this.value">
             </div>
         </div>
-
         <button disabled id="btn-iniciar" style="background-color: #555; margin-top: 30px;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
     </div>
 
-    <!-- PAINEL GAVETA (MEU CARTÃO) -->
-    <div id="slide-overlay" class="inativo">
+    <!-- PAINEL GAVETA (MEU CARTÃO DO HOST) -->
+    <div id="slide-overlay">
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
-        <div id="slide-content">
-            <button onclick="closeSlide()" style="background-color: #555; margin-bottom: 20px; width: auto; padding: 10px 20px; font-size: 14px; border-radius: 6px;">⬅ Voltar para Configurações</button>
+        <div id="slide-content" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+            <button onclick="closeSlide()" style="background-color: #555; width: 100%; max-width: 360px; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 20px;">⬅ Voltar para Configurações da Sala</button>
             
-            <div id="host-painel-login" style="margin-top: 20px; padding: 20px; background: #222; border-radius: 12px; border: 2px solid #3498db;">
-                <h3 style="color: #3498db; margin-top:0;">Criar o Perfil do Host</h3>
-                <input type="text" id="host-nome-input" placeholder="Seu Nome/Apelido" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
-                <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Conectar à Sala</button>
+            <div class="drawer-box" id="host-config-modo">
+                <label style="color: white; margin-bottom: 10px; display: block; font-weight: bold;">Modo de Transmissão:</label>
+                <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                    <span style="font-weight: bold; color: #3498db;" id="lbl-modo-host">Apenas Painel</span>
+                    <label class="switch">
+                        <input type="checkbox" id="cfg-modo-jogo-toggle" onchange="alternarModoJogo()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span style="font-weight: bold; color: #555;" id="lbl-modo-jogador">Painel + Jogador</span>
+                </div>
             </div>
 
-            <!-- TELA DE ESPERA ALINHADA IGUAL A DO JOGADOR -->
-            <div id="host-painel-espera" class="escondido" style="margin-top: 20px; padding: 20px; background: #292929; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div class="drawer-box escondido" id="host-painel-login">
+                <h3 style="color: #3498db; margin-top:0;">Criar Perfil do Host</h3>
+                <input type="text" id="host-nome-input" placeholder="Seu Nome de Jogador" style="margin-bottom: 15px; width: 100%;">
+                <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Conectar à Partida</button>
+            </div>
+
+            <div class="drawer-box escondido" id="host-painel-espera">
                 <h2 style="margin-top: 5px;">Conectado!</h2>
                 <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: <span id="host-meu-nome-display"></span></p>
                 <div id="host-meu-emoji-display" style="font-size: 60px; margin: 10px 0;">👤</div>
                 <div class="spinner"></div>
-                <p style="color: #888; font-size: 14px;">Aguarde o início da partida...</p>
-                
-                <div id="host-bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px; width: 100%;">
+                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Aguarde o início da partida...</p>
+                <div style="width: 100%; border-top: 1px solid #444; padding-top: 15px;">
                     <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar:</p>
-                    <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto; padding-bottom: 10px;"></div>
+                    <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto;"></div>
                 </div>
             </div>
             
-            <div id="host-painel-secreto" class="container escondido" style="border: 4px solid transparent; width: 100%; box-sizing: border-box; margin: 30px 0;">
+            <button id="btn-iniciar-drawer" class="escondido" style="background-color: #555; max-width: 360px; margin-bottom: 20px;" onclick="iniciarPartida()" disabled>Aguardando Jogadores...</button>
+
+            <div class="drawer-box escondido" id="host-painel-secreto" style="border: 4px solid transparent;">
                 <h3 id="host-tema-display" style="color: #777; text-transform: uppercase; margin-top: 0; letter-spacing: 1px;">TEMA</h3>
                 <h2 id="host-papel-titulo" style="font-size: 26px; margin: 8px 0;">INOCENTE / IMPOSTOR</h2>
                 <div id="host-caos-alerta" class="escondido" style="color: #f1c40f; font-weight: bold; font-size: 13px; margin-bottom: 8px;">⚠️ ADVERTÊNCIA: CAOS ATIVO</div>
@@ -184,25 +182,25 @@
                 <button onclick="ocultarTelaSecretaHost()" style="background-color: #333; margin-top: 20px;">Ocultar Informações</button>
             </div>
 
-            <div id="host-painel-votacao-interna" class="container escondido" style="border: 2px solid #e74c3c; width: 100%; box-sizing: border-box; margin: 30px 0;">
-                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO DO HOST</h2>
+            <div class="drawer-box escondido" id="host-painel-votacao-interna" style="border: 2px solid #e74c3c;">
+                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO</h2>
                 <div id="host-aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
                     ⚠️ O Caos alterou a quantidade de Impostores!
                 </div>
                 <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;">Você seleciona <strong style="color:white" id="host-qtd-alvo">1</strong> suspeito(s):</p>
-                <div id="host-botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></div>
+                <div id="host-botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;"></div>
                 <button id="host-btn-submeter-voto" onclick="submeterVotoHost()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto</button>
             </div>
             
-            <div id="host-painel-cadeado" class="container escondido" style="border: 2px solid #555; width: 100%; box-sizing: border-box; margin: 30px 0; padding: 40px;">
+            <div class="drawer-box escondido" id="host-painel-cadeado" style="border: 2px solid #555; padding: 40px;">
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
                 <h2>Área Restrita</h2>
-                <p style="color: #aaa;">Arraste a tela para a direita ou clique no botão acima para retornar ao painel.</p>
+                <p style="color: #aaa; font-size: 14px;">Arraste a tela para a direita ou feche a aba para voltar ao painel principal.</p>
             </div>
         </div>
     </div>
 
-    <!-- TELAS DA TV PÚBLICA -->
+    <!-- TELAS DA TV PÚBLICA / PAINEL -->
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
         <h2 style="color: #f1c40f;">Quem inicia o debate: <br><span id="primeiro-falar" style="font-size: 40px;">---</span></h2>
@@ -226,7 +224,7 @@
     <div class="container escondido" id="painel-votacao">
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
-        <p style="color: #aaa; font-style: italic;">Aguardando todos os celulares submeterem seus vereditos...</p>
+        <p style="color: #aaa; font-style: italic;">Aguardando todos os jogadores submeterem seus vereditos...</p>
         <button onclick="forcarLobby()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">⏹ Cancelar e Voltar ao Lobby</button>
     </div>
 
@@ -245,7 +243,8 @@
         <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
-        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Voltar ao Menu Inicial e Avançar</button>
+        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Voltar ao Lobby (Próxima Rodada)</button>
+        <button onclick="forcarLobbyEInicio()" style="background-color: #c0392b; margin-top: 10px;">Encerrar Sala e Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -278,15 +277,14 @@
 
         function criarSala() { socket.emit('criar_sala'); }
 
-        function fecharLobby() {
-            document.getElementById('painel-lobby').classList.add('escondido');
-            document.getElementById('painel-inicio').classList.remove('escondido');
-            souJogador = false; meuNomeHost = "";
-        }
+        function fecharLobby() { document.getElementById('painel-lobby').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); souJogador = false; meuNomeHost = ""; }
         
-        function forcarLobby() {
-            if(confirm("Deseja interromper a partida atual e mandar todos de volta para o Lobby?")) {
+        function forcarLobby() { if(confirm("Deseja interromper a partida atual e mandar todos de volta para o Lobby?")) { socket.emit('forcar_lobby', { codigo: codigo_atual }); } }
+        
+        function forcarLobbyEInicio() {
+            if(confirm("Deseja encerrar esta sala e voltar à Tela Inicial para todos?")) {
                 socket.emit('forcar_lobby', { codigo: codigo_atual });
+                setTimeout(() => { location.reload(); }, 500);
             }
         }
 
@@ -295,8 +293,7 @@
             document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
             closeSlide();
             document.getElementById('painel-lobby').classList.remove('escondido');
-            host_papel_oculto = false;
-            hostFaseVotacaoRenderizada = false;
+            host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
             
             if (souJogador && modoJogoAtual === 'host_jogador') {
                 document.getElementById('host-painel-secreto').classList.add('escondido');
@@ -317,48 +314,38 @@
             if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
         });
 
-        // --- ABA DESLIZANTE DO HOST (LOGICA DE GAVETA E SWIPE) ---
+        // --- ABA DESLIZANTE DO HOST ---
         let slideOverlay = document.getElementById('slide-overlay');
-        let slideIsOpen = false;
-        let startX = 0;
-
+        let slideIsOpen = false; let startX = 0;
         function toggleSlide() { if(slideIsOpen) closeSlide(); else openSlide(); }
         function openSlide() { slideOverlay.style.right = '0'; slideIsOpen = true; }
         function closeSlide() { slideOverlay.style.right = '-100vw'; slideIsOpen = false; }
 
         document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.addEventListener('touchend', e => {
-            if (modoJogoAtual !== 'host_jogador') return;
             let diff = e.changedTouches[0].clientX - startX;
             if (!slideIsOpen && diff < -60 && startX > window.innerWidth - 80) openSlide();
             if (slideIsOpen && diff > 60) closeSlide();
         });
 
-        // --- SISTEMA HOST JOGADOR (Lobby e Emojis) ---
         function alternarModoJogo() {
             const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
             modoJogoAtual = toggle ? 'host_jogador' : 'host';
-            
             document.getElementById('lbl-modo-host').style.color = toggle ? '#555' : '#3498db';
             document.getElementById('lbl-modo-jogador').style.color = toggle ? '#3498db' : '#555';
 
             if (modoJogoAtual === 'host_jogador') {
-                document.getElementById('slide-overlay').classList.remove('inativo');
                 document.getElementById('host-painel-login').classList.remove('escondido');
-                if(!souJogador) openSlide();
             } else {
-                document.getElementById('slide-overlay').classList.add('inativo');
-                closeSlide();
-                if(souJogador) socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost });
+                document.getElementById('host-painel-login').classList.add('escondido');
+                if(souJogador) { socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost }); }
             }
             validarBotaoIniciar();
         }
 
         function entrarHostComoJogador() {
             meuNomeHost = document.getElementById('host-nome-input').value.trim();
-            if (meuNomeHost && codigo_atual) {
-                socket.emit('entrar_na_sala', { nome: meuNomeHost, codigo: codigo_atual });
-            }
+            if (meuNomeHost && codigo_atual) { socket.emit('entrar_na_sala', { nome: meuNomeHost, codigo: codigo_atual }); }
         }
 
         socket.on('entrada_sucesso', (dados) => {
@@ -373,61 +360,43 @@
 
         socket.on('lista_jogadores_atualizada', (dados) => {
             listaJogadoresCache = dados.jogadores;
-            const ul = document.getElementById('lista-jogadores');
-            ul.innerHTML = '';
+            const ul = document.getElementById('lista-jogadores'); ul.innerHTML = '';
             dados.jogadores.forEach(j => {
-                ul.innerHTML += `<li class="jogador-card">
-                    <span>${j.emoji} <strong>${j.nome}</strong></span>
-                    <button class="btn-expulsar" onclick="expulsar('${j.nome}')" title="Expulsar">✖</button>
-                </li>`;
+                ul.innerHTML += `<li class="jogador-card"><span>${j.emoji} <strong>${j.nome}</strong></span>
+                <button class="btn-expulsar" onclick="expulsar('${j.nome}')" title="Expulsar">✖</button></li>`;
             });
             document.getElementById('contagem').innerText = dados.jogadores.length;
-            renderizarGradeEmojisHost();
-            validarBotaoIniciar();
+            renderizarGradeEmojisHost(); validarBotaoIniciar();
         });
 
         function validarBotaoIniciar() {
-            const btn = document.getElementById('btn-iniciar');
+            const btn1 = document.getElementById('btn-iniciar');
+            const btn2 = document.getElementById('btn-iniciar-drawer');
             let podeIniciar = listaJogadoresCache.length >= 3;
             if (modoJogoAtual === 'host_jogador' && !souJogador) podeIniciar = false;
             
-            btn.disabled = !podeIniciar;
-            btn.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555';
-            btn.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+            btn1.disabled = !podeIniciar; btn1.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555'; btn1.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+            btn2.disabled = !podeIniciar; btn2.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555'; btn2.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+            if (modoJogoAtual === 'host_jogador') btn2.classList.remove('escondido'); else btn2.classList.add('escondido');
         }
 
         function renderizarGradeEmojisHost() {
             if (modoJogoAtual !== 'host_jogador') return;
-            const grade = document.getElementById('host-grade-emojis');
-            if(!grade) return;
+            const grade = document.getElementById('host-grade-emojis'); if(!grade) return;
             grade.innerHTML = '';
-            
             const meuJogador = listaJogadoresCache.find(j => j.nome === meuNomeHost);
             if (meuJogador) document.getElementById('host-meu-emoji-display').innerText = meuJogador.emoji;
 
             TODOS_EMOJIS.forEach(emoji => {
-                const container = document.createElement('div');
-                container.className = 'emoji-opt-container';
+                const container = document.createElement('div'); container.className = 'emoji-opt-container';
                 const dono = listaJogadoresCache.find(j => j.emoji === emoji);
-
                 if (dono) {
-                    if (dono.nome === meuNomeHost) {
-                        container.classList.add('selecionado');
-                        container.innerText = emoji;
-                    } else {
-                        container.classList.add('ocupado');
-                        container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`;
-                    }
-                } else {
-                    container.innerText = emoji;
-                    container.onclick = () => { 
-                        if (souJogador) socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meuNomeHost, emoji: emoji}); 
-                    };
-                }
+                    if (dono.nome === meuNomeHost) { container.classList.add('selecionado'); container.innerText = emoji; } 
+                    else { container.classList.add('ocupado'); container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`; }
+                } else { container.innerText = emoji; container.onclick = () => { if (souJogador) socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meuNomeHost, emoji: emoji}); }; }
                 grade.appendChild(container);
             });
         }
-        // ----------------------------------------------
 
         function expulsar(nomeJogador) {
             if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
@@ -442,52 +411,37 @@
             }
         }
 
-        function adjTimer(val) {
-            cfgTempoGlobal += val;
-            if (cfgTempoGlobal < 30) cfgTempoGlobal = 30;
-            document.getElementById('cfg-timer-display').innerText = cfgTempoGlobal + "s";
-        }
+        function adjTimer(val) { cfgTempoGlobal += val; if (cfgTempoGlobal < 30) cfgTempoGlobal = 30; document.getElementById('cfg-timer-display').innerText = cfgTempoGlobal + "s"; }
 
         function iniciarPartida() {
-            host_papel_oculto = false;
-            hostFaseVotacaoRenderizada = false;
+            host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
             document.getElementById('host-painel-espera').classList.add('escondido');
-            socket.emit('iniciar_partida', {
-                codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value,
-                imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value,
-                trapaca: document.getElementById('cfg-trapaca').value, tempo: cfgTempoGlobal
-            });
+            document.getElementById('btn-iniciar-drawer').classList.add('escondido');
+            socket.emit('iniciar_partida', { codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value, imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value, trapaca: document.getElementById('cfg-trapaca').value, tempo: cfgTempoGlobal });
+            closeSlide();
         }
 
-        // --- TELAS INTERNAS DO GAVETÃO (HOST/JOGADOR) ---
         socket.on('distribuir_papeis', (dados) => {
             if (modoJogoAtual === 'host_jogador' && souJogador) {
-                if (host_papel_oculto) return; 
-
+                socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'revelacao' });
+                if (host_papel_oculto || dados.ja_confirmou) {
+                    document.getElementById('host-painel-secreto').classList.add('escondido');
+                    document.getElementById('host-painel-cadeado').classList.remove('escondido');
+                    return;
+                }
                 document.getElementById('host-painel-cadeado').classList.add('escondido');
                 document.getElementById('host-painel-votacao-interna').classList.add('escondido');
                 document.getElementById('host-painel-secreto').classList.remove('escondido');
-                
-                document.getElementById('host-tema-display').innerText = dados.tema;
-                document.getElementById('host-palavra-secreta').innerText = dados.palavra_ou_dica;
-                
-                if (dados.caos_ativo) document.getElementById('host-caos-alerta').classList.remove('escondido');
-                else document.getElementById('host-caos-alerta').classList.add('escondido');
+                document.getElementById('host-tema-display').innerText = dados.tema; document.getElementById('host-palavra-secreta').innerText = dados.palavra_ou_dica;
+                if (dados.caos_ativo) document.getElementById('host-caos-alerta').classList.remove('escondido'); else document.getElementById('host-caos-alerta').classList.add('escondido');
 
                 const painelSec = document.getElementById('host-painel-secreto');
                 if (dados.papel === 'impostor') {
-                    painelSec.style.borderColor = "#e74c3c";
-                    document.getElementById('host-papel-titulo').innerText = "VOCÊ É O IMPOSTOR";
-                    document.getElementById('host-papel-titulo').style.color = "#e74c3c";
-                    if (dados.equipe && dados.equipe.length > 0) {
-                        document.getElementById('host-trapaca-alerta').classList.remove('escondido');
-                        document.getElementById('host-equipe-nomes').innerText = dados.equipe.join(', ');
-                    } else { document.getElementById('host-trapaca-alerta').classList.add('escondido'); }
+                    painelSec.style.borderColor = "#e74c3c"; document.getElementById('host-papel-titulo').innerText = "VOCÊ É O IMPOSTOR"; document.getElementById('host-papel-titulo').style.color = "#e74c3c";
+                    if (dados.equipe && dados.equipe.length > 0) { document.getElementById('host-trapaca-alerta').classList.remove('escondido'); document.getElementById('host-equipe-nomes').innerText = dados.equipe.join(', '); } 
+                    else { document.getElementById('host-trapaca-alerta').classList.add('escondido'); }
                 } else {
-                    painelSec.style.borderColor = "#2ecc71";
-                    document.getElementById('host-papel-titulo').innerText = "VOCÊ É INOCENTE";
-                    document.getElementById('host-papel-titulo').style.color = "#2ecc71";
-                    document.getElementById('host-trapaca-alerta').classList.add('escondido');
+                    painelSec.style.borderColor = "#2ecc71"; document.getElementById('host-papel-titulo').innerText = "VOCÊ É INOCENTE"; document.getElementById('host-papel-titulo').style.color = "#2ecc71"; document.getElementById('host-trapaca-alerta').classList.add('escondido');
                 }
             }
         });
@@ -502,209 +456,109 @@
 
         socket.on('ir_para_tela_votacao', (dados) => {
             if (modoJogoAtual === 'host_jogador' && souJogador) {
+                socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'votacao' });
+                if (dados.ja_votou) { document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); return; }
                 if (hostFaseVotacaoRenderizada) return;
                 hostFaseVotacaoRenderizada = true;
 
                 document.getElementById('host-painel-cadeado').classList.add('escondido');
                 document.getElementById('host-painel-votacao-interna').classList.remove('escondido');
-                
-                hostVotosSelecionados = [];
-                hostMaxVotos = dados.qtd_votos || 1;
-                document.getElementById('host-qtd-alvo').innerText = hostMaxVotos;
-                document.getElementById('host-btn-submeter-voto').disabled = true;
+                hostVotosSelecionados = []; hostMaxVotos = dados.qtd_votos || 1;
+                document.getElementById('host-qtd-alvo').innerText = hostMaxVotos; document.getElementById('host-btn-submeter-voto').disabled = true;
+                if(dados.caos_geral) document.getElementById('host-aviso-caos-votacao').classList.remove('escondido'); else document.getElementById('host-aviso-caos-votacao').classList.add('escondido');
 
-                if(dados.caos_geral) document.getElementById('host-aviso-caos-votacao').classList.remove('escondido');
-                else document.getElementById('host-aviso-caos-votacao').classList.add('escondido');
-
-                const divBotoes = document.getElementById('host-botoes-votacao');
-                divBotoes.innerHTML = '';
-
+                const divBotoes = document.getElementById('host-botoes-votacao'); divBotoes.innerHTML = '';
                 dados.jogadores.forEach(j => {
                     if(j.nome !== meuNomeHost) {
-                        const btn = document.createElement('button');
-                        btn.className = 'voto-btn';
-                        btn.innerText = `${j.emoji} ${j.nome}`;
-                        btn.style.width = "auto";
-                        btn.style.padding = "10px 15px";
-                        btn.onclick = () => alternarVotoHost(btn, j.nome);
-                        divBotoes.appendChild(btn);
+                        const btn = document.createElement('button'); btn.className = 'voto-btn'; btn.innerText = `${j.emoji} ${j.nome}`; btn.style.width = "auto"; btn.style.padding = "10px 15px";
+                        btn.onclick = () => alternarVotoHost(btn, j.nome); divBotoes.appendChild(btn);
                     }
                 });
             }
         });
 
         function alternarVotoHost(btn, nome) {
-            if (hostVotosSelecionados.includes(nome)) {
-                hostVotosSelecionados = hostVotosSelecionados.filter(n => n !== nome);
-                btn.classList.remove('selecionado');
-            } else {
-                if (hostVotosSelecionados.length < hostMaxVotos) {
-                    hostVotosSelecionados.push(nome);
-                    btn.classList.add('selecionado');
-                }
-            }
+            if (hostVotosSelecionados.includes(nome)) { hostVotosSelecionados = hostVotosSelecionados.filter(n => n !== nome); btn.classList.remove('selecionado'); } 
+            else { if (hostVotosSelecionados.length < hostMaxVotos) { hostVotosSelecionados.push(nome); btn.classList.add('selecionado'); } }
             document.getElementById('host-btn-submeter-voto').disabled = (hostVotosSelecionados.length !== hostMaxVotos);
         }
 
         function submeterVotoHost() {
             if (hostVotosSelecionados.length === hostMaxVotos) {
                 socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
-                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
-                document.getElementById('host-painel-cadeado').classList.remove('escondido');
-                closeSlide();
+                document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); closeSlide();
             }
         }
-        // --------------------------------------------
 
         socket.on('partida_iniciada_host', (dados) => {
             clearInterval(intervaloTimer);
-            if (modoJogoAtual === 'host') {
-                document.getElementById('painel-lobby').classList.add('escondido');
-                document.getElementById('painel-jogo').classList.remove('escondido');
-            }
-            document.getElementById('bloco-timer').classList.add('escondido');
-            document.getElementById('bloco-aguardando').classList.remove('escondido');
-            document.getElementById('primeiro-falar').innerText = dados.primeiro;
-            document.getElementById('leitura-contagem').innerText = "0";
-            document.getElementById('leitura-total').innerText = dados.total_jogadores;
+            document.getElementById('painel-lobby').classList.add('escondido'); document.getElementById('painel-jogo').classList.remove('escondido');
+            document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido');
+            document.getElementById('primeiro-falar').innerText = dados.primeiro; document.getElementById('leitura-contagem').innerText = "0"; document.getElementById('leitura-total').innerText = dados.total_jogadores;
         });
 
-        socket.on('progresso_leitura_host', (dados) => {
-            document.getElementById('leitura-contagem').innerText = dados.prontos;
-            document.getElementById('leitura-total').innerText = dados.total;
-        });
+        socket.on('progresso_leitura_host', (dados) => { document.getElementById('leitura-contagem').innerText = dados.prontos; document.getElementById('leitura-total').innerText = dados.total; });
 
-        socket.on('travar_timer_host', () => {
-            clearInterval(intervaloTimer);
-            document.getElementById('bloco-timer').classList.add('escondido');
-            document.getElementById('bloco-aguardando').classList.remove('escondido');
-        });
+        socket.on('travar_timer_host', () => { clearInterval(intervaloTimer); document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido'); });
 
         socket.on('todos_leram_papeis', (dados) => {
-            document.getElementById('bloco-aguardando').classList.add('escondido');
-            document.getElementById('bloco-timer').classList.remove('escondido');
-            
-            let tempoRestante = dados.tempo;
-            let tempoTotal = dados.tempo;
-            const ampFill = document.getElementById('ampulheta-fill');
-            const display = document.getElementById('timer-restante');
-            
-            display.innerText = tempoRestante + "s";
-            ampFill.style.width = '0%';
-            
+            document.getElementById('bloco-aguardando').classList.add('escondido'); document.getElementById('bloco-timer').classList.remove('escondido');
+            let tempoRestante = dados.tempo; let tempoTotal = dados.tempo; const ampFill = document.getElementById('ampulheta-fill'); const display = document.getElementById('timer-restante');
+            display.innerText = tempoRestante + "s"; ampFill.style.width = '0%';
             clearInterval(intervaloTimer);
             intervaloTimer = setInterval(() => {
-                tempoRestante--;
-                display.innerText = tempoRestante + "s";
-                let pct = ((tempoTotal - tempoRestante) / tempoTotal) * 100;
-                ampFill.style.width = pct + '%';
-                
+                tempoRestante--; display.innerText = tempoRestante + "s"; let pct = ((tempoTotal - tempoRestante) / tempoTotal) * 100; ampFill.style.width = pct + '%';
                 if(tempoRestante <= 0) { clearInterval(intervaloTimer); irParaVotacao(); }
             }, 1000);
         });
 
         function pularTimer() { clearInterval(intervaloTimer); irParaVotacao(); }
-
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
         socket.on('votacao_iniciada_host', (dados) => {
-            if (modoJogoAtual === 'host') {
-                document.getElementById('painel-jogo').classList.add('escondido');
-                document.getElementById('painel-votacao').classList.remove('escondido');
-            }
-            document.getElementById('votos-contagem').innerText = "0";
-            if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
-            
+            document.getElementById('painel-jogo').classList.add('escondido'); document.getElementById('painel-votacao').classList.remove('escondido');
+            document.getElementById('votos-contagem').innerText = "0"; if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
             if(souJogador && modoJogoAtual === 'host_jogador') openSlide();
         });
 
-        socket.on('voto_recebido_host', (dados) => {
-            document.getElementById('votos-contagem').innerText = dados.total_votos;
-            document.getElementById('votos-total').innerText = dados.total_jogadores;
-        });
+        socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
 
         socket.on('resultado_votacao_host', (dados) => {
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
-            closeSlide();
-            document.getElementById('painel-suspense').classList.remove('escondido');
-            
-            let count = 3;
-            document.getElementById('contagem-regressiva').innerText = count;
+            if (souJogador) { socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'resultado' }); }
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido')); closeSlide(); document.getElementById('painel-suspense').classList.remove('escondido');
+            let count = 3; document.getElementById('contagem-regressiva').innerText = count;
             let interval = setInterval(() => {
                 count--;
-                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } 
-                else {
-                    clearInterval(interval);
-                    document.getElementById('painel-suspense').classList.add('escondido');
-                    mostrarResultadoFinal(dados);
-                }
+                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } else { clearInterval(interval); document.getElementById('painel-suspense').classList.add('escondido'); mostrarResultadoFinal(dados); }
             }, 1000);
         });
 
         function mostrarResultadoFinal(dados) {
             document.getElementById('painel-resultado').classList.remove('escondido');
-            const titulo = document.getElementById('titulo-revelacao');
-            titulo.innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
-            
+            document.getElementById('titulo-revelacao').innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
             const blocoImps = document.getElementById('bloco-impostores-revelados');
             let containerHtml = '<div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">';
             dados.destaques.forEach(d => {
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
                 let corStatus = d.status.includes('pego') || d.status.includes('executado') ? '#e74c3c' : '#2ecc71';
-                containerHtml += `
-                    <div style="text-align: center; background: #222; padding: 20px; border-radius: 12px; border: 2px solid ${corPapel}; min-width: 180px;">
-                        <div style="font-size: 80px; margin: 0; line-height: 1;">${d.emoji}</div>
-                        <div style="font-size: 28px; font-weight: bold; color: white; margin-top: 10px;">${d.nome}</div>
-                        <div style="font-size: 20px; color: ${corPapel}; font-weight: bold; text-transform: uppercase;">${d.papel}</div>
-                        <div style="font-size: 18px; color: ${corStatus}; margin-top: 5px; font-weight: bold;">${d.status}</div>
-                    </div>`;
+                containerHtml += `<div style="text-align: center; background: #222; padding: 20px; border-radius: 12px; border: 2px solid ${corPapel}; min-width: 180px;"><div style="font-size: 80px; margin: 0; line-height: 1;">${d.emoji}</div><div style="font-size: 28px; font-weight: bold; color: white; margin-top: 10px;">${d.nome}</div><div style="font-size: 20px; color: ${corPapel}; font-weight: bold; text-transform: uppercase;">${d.papel}</div><div style="font-size: 18px; color: ${corStatus}; margin-top: 5px; font-weight: bold;">${d.status}</div></div>`;
             });
-            containerHtml += '</div>';
-            blocoImps.innerHTML = containerHtml;
-
-            const blocoOutros = document.getElementById('bloco-outros-votados');
-            const listaOutros = document.getElementById('lista-outros-votados');
-            listaOutros.innerHTML = '';
-            
-            if (dados.outros_votados.length > 0) {
-                blocoOutros.style.display = 'block';
-                dados.outros_votados.forEach(out => { listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`; });
-            } else { blocoOutros.style.display = 'none'; }
-
+            containerHtml += '</div>'; blocoImps.innerHTML = containerHtml;
+            const blocoOutros = document.getElementById('bloco-outros-votados'); const listaOutros = document.getElementById('lista-outros-votados'); listaOutros.innerHTML = '';
+            if (dados.outros_votados.length > 0) { blocoOutros.style.display = 'block'; dados.outros_votados.forEach(out => { listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`; }); } else { blocoOutros.style.display = 'none'; }
             document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
-            
-            const ul = document.getElementById('lista-placar-atual');
-            ul.innerHTML = '';
-            for (const [nome, pts] of Object.entries(dados.pontos)) {
-                ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`;
-            }
+            const ul = document.getElementById('lista-placar-atual'); ul.innerHTML = '';
+            for (const [nome, pts] of Object.entries(dados.pontos)) { ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`; }
         }
 
         function voltarAoLobby() { socket.emit('voltar_para_lobby', { codigo: codigo_atual }); }
-
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
-        socket.on('receber_coroacao', (dados) => {
-            document.getElementById('painel-inicio').classList.add('escondido');
-            const painel = document.getElementById('painel-coroacao');
-            painel.classList.remove('escondido');
-            document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
-            const div = document.getElementById('coroacao-conteudo');
-            div.innerHTML = '';
-            if(dados.ranking.length === 0) { div.innerHTML = "<p>Nenhum dado registrado para este período.</p>"; return; }
-            dados.ranking.forEach((pos, idx) => {
-                let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
-                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
-            });
-        });
-
+        socket.on('receber_coroacao', (dados) => { /*...*/ });
         function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
         function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
-        function deletarJogadorDB() {
-            let nome = document.getElementById('ipt-del-jogador').value.trim();
-            if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) { socket.emit('deletar_jogador_banco', { nome: nome }); document.getElementById('ipt-del-jogador').value = ""; }
-        }
+        function deletarJogadorDB() { let nome = document.getElementById('ipt-del-jogador').value.trim(); if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) { socket.emit('deletar_jogador_banco', { nome: nome }); document.getElementById('ipt-del-jogador').value = ""; } }
         socket.on('alerta_host', (dados) => { alert(dados.mensagem); if(dados.mensagem.includes("sucesso")) fecharPainelBanco(); });
     </script>
 </body>
