@@ -31,6 +31,9 @@
         #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
         #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
 
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .emoji-opt-container { position: relative; display: inline-block; width: 48px; height: 48px; font-size: 32px; line-height: 48px; text-align: center; background: #222; border-radius: 8px; cursor: pointer; user-select: none; transition: 0.2s; }
         .emoji-opt-container:active { background: #555; }
         .emoji-opt-container.ocupado { opacity: 0.4; cursor: not-allowed; background: #111; }
@@ -49,19 +52,9 @@
         .slider.round { border-radius: 34px; }
         .slider.round:before { border-radius: 50%; }
 
-        #slide-overlay {
-            position: fixed; top: 0; right: -100vw; width: 100vw; height: 100vh;
-            background: #1e1e1e; z-index: 9999; transition: right 0.3s ease-out;
-            display: flex; box-shadow: -5px 0 15px rgba(0,0,0,0.8);
-        }
+        #slide-overlay { position: fixed; top: 0; right: -100vw; width: 100vw; height: 100vh; background: #1e1e1e; z-index: 9999; transition: right 0.3s ease-out; display: flex; box-shadow: -5px 0 15px rgba(0,0,0,0.8); }
         #slide-overlay.inativo { display: none !important; }
-        #slide-handle {
-            position: absolute; left: -40px; top: 50%; transform: translateY(-50%);
-            width: 40px; height: 140px; background: #3498db; color: white;
-            display: flex; align-items: center; justify-content: center;
-            writing-mode: vertical-rl; text-orientation: mixed; border-radius: 10px 0 0 10px;
-            cursor: pointer; font-weight: bold; font-size: 16px; user-select: none;
-        }
+        #slide-handle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); width: 40px; height: 140px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: mixed; border-radius: 10px 0 0 10px; cursor: pointer; font-weight: bold; font-size: 16px; user-select: none; }
         #slide-content { flex: 1; padding: 20px; overflow-y: auto; text-align: center; }
 
         @media (max-width: 768px) {
@@ -92,17 +85,14 @@
 
     <div class="container escondido" id="painel-banco">
         <h1 style="color: #e74c3c; font-size: 30px;">⚙️ ADMINISTRAÇÃO DE DADOS</h1>
-        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis e afetam o banco de dados principal.</p>
-        
-        <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras Usadas</button>
-        <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Histórico de Partidas e Ranking</button>
-        
+        <p style="color: #aaa; margin-bottom: 25px;">Atenção: Estas ações são irreversíveis.</p>
+        <button onclick="resetarBanco('palavras')" style="background-color: #f39c12; margin-top: 10px;">Apagar Histórico de Palavras</button>
+        <button onclick="resetarBanco('partidas')" style="background-color: #d35400; margin-top: 20px;">Zerar Partidas e Ranking</button>
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
-            <h3 style="color: #aaa; margin-bottom: 10px;">Excluir Jogador Específico do Banco</h3>
+            <h3 style="color: #aaa; margin-bottom: 10px;">Excluir Jogador Específico</h3>
             <input type="text" id="ipt-del-jogador" placeholder="Nome Exato do Jogador" style="width: 60%; display: inline-block;">
             <button onclick="deletarJogadorDB()" style="width: 35%; background-color: #8e44ad; padding: 12px; margin-top: 0; display: inline-block;">Apagar</button>
         </div>
-
         <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL</button>
         <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
     </div>
@@ -159,24 +149,30 @@
         <button disabled id="btn-iniciar" style="background-color: #555; margin-top: 30px;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
     </div>
 
-    <!-- PAINEL GAVETA (TELA SECRETA DO HOST JOGADOR) -->
+    <!-- PAINEL GAVETA (MEU CARTÃO) -->
     <div id="slide-overlay" class="inativo">
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
         <div id="slide-content">
-            <button onclick="closeSlide()" style="background-color: #555; margin-bottom: 20px; width: auto; padding: 10px 20px; font-size: 14px; border-radius: 6px;">⬅ Voltar para o Painel Principal</button>
+            <button onclick="closeSlide()" style="background-color: #555; margin-bottom: 20px; width: auto; padding: 10px 20px; font-size: 14px; border-radius: 6px;">⬅ Voltar para Configurações</button>
             
-            <div id="bloco-host-jogador" style="margin-top: 20px; padding: 20px; background: #222; border-radius: 12px; border: 2px solid #3498db;">
+            <div id="host-painel-login" style="margin-top: 20px; padding: 20px; background: #222; border-radius: 12px; border: 2px solid #3498db;">
                 <h3 style="color: #3498db; margin-top:0;">Criar o Perfil do Host</h3>
-                <input type="text" id="host-nome-input" placeholder="Digite seu Nome de Jogador" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
-                <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar:</p>
-                <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto;"></div>
-                <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9; margin-top: 15px;">Confirmar Participação</button>
+                <input type="text" id="host-nome-input" placeholder="Seu Nome/Apelido" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+                <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Conectar à Sala</button>
             </div>
 
-            <div id="host-painel-espera" class="container escondido" style="border: 2px solid #555; width: 100%; box-sizing: border-box; margin: 30px 0; padding: 40px;">
-                <h1 style="font-size: 60px; margin: 0;">⏳</h1>
-                <h2>Aguardando Partida</h2>
-                <p style="color: #aaa;">Você já está na sala. Aguarde o início do jogo para ver seu papel.</p>
+            <!-- TELA DE ESPERA ALINHADA IGUAL A DO JOGADOR -->
+            <div id="host-painel-espera" class="escondido" style="margin-top: 20px; padding: 20px; background: #292929; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <h2 style="margin-top: 5px;">Conectado!</h2>
+                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">ID: <span id="host-meu-nome-display"></span></p>
+                <div id="host-meu-emoji-display" style="font-size: 60px; margin: 10px 0;">👤</div>
+                <div class="spinner"></div>
+                <p style="color: #888; font-size: 14px;">Aguarde o início da partida...</p>
+                
+                <div id="host-bloco-emojis" style="margin-top: 25px; border-top: 1px solid #444; padding-top: 15px; width: 100%;">
+                    <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">Personalize seu Avatar:</p>
+                    <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto; padding-bottom: 10px;"></div>
+                </div>
             </div>
             
             <div id="host-painel-secreto" class="container escondido" style="border: 4px solid transparent; width: 100%; box-sizing: border-box; margin: 30px 0;">
@@ -201,7 +197,7 @@
             <div id="host-painel-cadeado" class="container escondido" style="border: 2px solid #555; width: 100%; box-sizing: border-box; margin: 30px 0; padding: 40px;">
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
                 <h2>Área Restrita</h2>
-                <p style="color: #aaa;">Arraste a tela para a direita ou clique em Voltar para retornar ao painel principal.</p>
+                <p style="color: #aaa;">Arraste a tela para a direita ou clique no botão acima para retornar ao painel.</p>
             </div>
         </div>
     </div>
@@ -249,7 +245,7 @@
         <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
-        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Avançar para Próxima Rodada</button>
+        <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Voltar ao Menu Inicial e Avançar</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -267,7 +263,7 @@
         
         let souJogador = false;
         let meuNomeHost = "";
-        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"];
+        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝", "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"];
         let listaJogadoresCache = [];
         let hostVotosSelecionados = [];
         let hostMaxVotos = 1;
@@ -301,6 +297,13 @@
             document.getElementById('painel-lobby').classList.remove('escondido');
             host_papel_oculto = false;
             hostFaseVotacaoRenderizada = false;
+            
+            if (souJogador && modoJogoAtual === 'host_jogador') {
+                document.getElementById('host-painel-secreto').classList.add('escondido');
+                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
+                document.getElementById('host-painel-cadeado').classList.add('escondido');
+                document.getElementById('host-painel-espera').classList.remove('escondido');
+            }
         });
 
         socket.on('sala_criada_sucesso', (dados) => {
@@ -314,7 +317,7 @@
             if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
         });
 
-        // --- ABA DESLIZANTE DO HOST ---
+        // --- ABA DESLIZANTE DO HOST (LOGICA DE GAVETA E SWIPE) ---
         let slideOverlay = document.getElementById('slide-overlay');
         let slideIsOpen = false;
         let startX = 0;
@@ -341,8 +344,7 @@
 
             if (modoJogoAtual === 'host_jogador') {
                 document.getElementById('slide-overlay').classList.remove('inativo');
-                document.getElementById('bloco-host-jogador').classList.remove('escondido');
-                renderizarGradeEmojisHost();
+                document.getElementById('host-painel-login').classList.remove('escondido');
                 if(!souJogador) openSlide();
             } else {
                 document.getElementById('slide-overlay').classList.add('inativo');
@@ -362,8 +364,9 @@
         socket.on('entrada_sucesso', (dados) => {
             if (dados.nome === meuNomeHost) {
                 souJogador = true;
-                document.getElementById('bloco-host-jogador').classList.add('escondido');
+                document.getElementById('host-painel-login').classList.add('escondido');
                 document.getElementById('host-painel-espera').classList.remove('escondido');
+                document.getElementById('host-meu-nome-display').innerText = dados.nome;
                 validarBotaoIniciar();
             }
         });
@@ -398,6 +401,9 @@
             const grade = document.getElementById('host-grade-emojis');
             if(!grade) return;
             grade.innerHTML = '';
+            
+            const meuJogador = listaJogadoresCache.find(j => j.nome === meuNomeHost);
+            if (meuJogador) document.getElementById('host-meu-emoji-display').innerText = meuJogador.emoji;
 
             TODOS_EMOJIS.forEach(emoji => {
                 const container = document.createElement('div');
@@ -421,6 +427,7 @@
                 grade.appendChild(container);
             });
         }
+        // ----------------------------------------------
 
         function expulsar(nomeJogador) {
             if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
@@ -428,8 +435,8 @@
                 if (nomeJogador === meuNomeHost) {
                     souJogador = false; meuNomeHost = "";
                     document.getElementById('host-painel-espera').classList.add('escondido');
-                    document.getElementById('host-nome-input').disabled = false; document.getElementById('host-nome-input').value = "";
-                    document.getElementById('bloco-host-jogador').classList.remove('escondido');
+                    document.getElementById('host-nome-input').value = "";
+                    document.getElementById('host-painel-login').classList.remove('escondido');
                     validarBotaoIniciar();
                 }
             }
@@ -547,6 +554,7 @@
                 closeSlide();
             }
         }
+        // --------------------------------------------
 
         socket.on('partida_iniciada_host', (dados) => {
             clearInterval(intervaloTimer);
