@@ -20,7 +20,6 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///leoposter.db')
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# A MÁGICA ACONTECE AQUI: NullPool impede o travamento de Threads do Eventlet
 engine = create_engine(DATABASE_URL, poolclass=NullPool)
 
 EMOJIS_DISPONIVEIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾"]
@@ -170,14 +169,14 @@ def enviar_estado_jogador(sala, jogador):
     elif fase == 'lobby': socketio.emit('retorno_lobby_celular', {}, to=sid)
 
 def monitorar_confirmacoes(codigo, fase_esperada, iteracao_id):
-    eventlet.sleep(2)
+    socketio.sleep(2)
     for _ in range(15):
         sala = salas_ativas.get(codigo)
         if not sala or sala.get('fase_atual') != fase_esperada or sala.get('iteracao_fase') != iteracao_id: break
         pendentes = [j for j in sala['jogadores'] if j['nome'] not in sala.get('confirmacoes_status', set())]
         if not pendentes: break
         for jogador in pendentes: enviar_estado_jogador(sala, jogador)
-        eventlet.sleep(3)
+        socketio.sleep(3)
 
 def checar_todos_leram(codigo):
     sala = salas_ativas.get(codigo)
@@ -502,18 +501,25 @@ def encerrar_votacao_interna(codigo):
 
     sala['fase_atual'] = 'resultado'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
     
+    # NOVA ENGINE DE VOTAÇÃO: 50% OU MAIS DOS VOTOS VÁLIDOS
     votos = sala.get('votos', {})
+    
+    # Eleitores válidos são os que não são impostores
+    eleitores_validos = [e for e in votos.keys() if e not in sala['impostores_atuais']]
+    votos_validos_total = len(eleitores_validos)
+    
+    # Limite para ser pego: Metade ou mais dos eleitores válidos
+    limite_para_pegar = max(1, votos_validos_total / 2.0)
+    
     contagem = {}
-    for eleitor, lista_votados in votos.items():
-        if eleitor not in sala['impostores_atuais']:
-            for votado in lista_votados: contagem[votado] = contagem.get(votado, 0) + 1
-    
-    max_votos = max(contagem.values()) if contagem else 0
-    eliminados = [k for k, v in contagem.items() if v == max_votos] if max_votos > 0 else []
+    for eleitor in eleitores_validos:
+        for votado in votos[eleitor]:
+            contagem[votado] = contagem.get(votado, 0) + 1
+            
+    # Quem foi efetivamente eliminado na mesa? (Recebeu >= metade)
+    eliminados_de_fato = [k for k, v in contagem.items() if v >= limite_para_pegar]
 
-    foi_eliminado_de_fato = eliminados[0] if len(eliminados) == 1 else None
     pontos_da_rodada = {}; detalhes_rodada = {}
-    
     for j in sala['jogadores']:
         nome = j['nome']; eh_impostor = nome in sala['impostores_atuais']
         votos_recebidos = contagem.get(nome, 0); votos_dados = votos.get(nome, [])
@@ -521,7 +527,7 @@ def encerrar_votacao_interna(codigo):
         
         pts = 0
         if eh_impostor:
-            if nome != foi_eliminado_de_fato: pts = 2
+            if nome not in eliminados_de_fato: pts = 2 # Pontua se fugir da forca
         else:
             if acertos_detetive > 0: pts = acertos_detetive
             
@@ -533,19 +539,22 @@ def encerrar_votacao_interna(codigo):
     except Exception as e: print("Erro ao salvar no banco:", e)
 
     destaques_resultado = []
+    # Os Impostores vão pro palco
     for imp in sala['impostores_atuais']:
         destaques_resultado.append({
             'nome': imp, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == imp), "👤"),
-            'papel': 'Impostor', 'status': 'Foi pego!' if imp == foi_eliminado_de_fato else 'Conseguiu fugir!'
+            'papel': 'Impostor', 'status': 'Foi pego!' if imp in eliminados_de_fato else 'Conseguiu fugir!'
         })
-        
-    if foi_eliminado_de_fato and foi_eliminado_de_fato not in sala['impostores_atuais']:
-        destaques_resultado.append({
-            'nome': foi_eliminado_de_fato, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == foi_eliminado_de_fato), "👤"),
-            'papel': 'Inocente', 'status': 'Foi executado!'
-        })
+    
+    # Inocentes que rodaram por engano também vão pro palco
+    for elim in eliminados_de_fato:
+        if elim not in sala['impostores_atuais']:
+            destaques_resultado.append({
+                'nome': elim, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == elim), "👤"),
+                'papel': 'Inocente', 'status': 'Executado por engano!'
+            })
 
-    outros_votados = [{'nome': nome, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == nome), "👤"), 'votos': qtd} for nome, qtd in sorted(contagem.items(), key=lambda x: x[1], reverse=True) if nome not in sala['impostores_atuais'] and nome != foi_eliminado_de_fato and qtd > 0]
+    outros_votados = [{'nome': nome, 'emoji': next((j['emoji'] for j in sala['jogadores'] if j['nome'] == nome), "👤"), 'votos': qtd} for nome, qtd in sorted(contagem.items(), key=lambda x: x[1], reverse=True) if nome not in sala['impostores_atuais'] and nome not in eliminados_de_fato and qtd > 0]
 
     payload_resultado = {
         'destaques': destaques_resultado,
