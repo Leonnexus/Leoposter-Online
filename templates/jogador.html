@@ -138,6 +138,8 @@
         let votos_selecionados = [];
         let max_votos_permitidos = 1;
         let celIntervaloTimer = null;
+        
+        // Travas de Memória de Renderização
         let jogador_papel_oculto = false;
         let jogadorFaseVotacaoRenderizada = false;
 
@@ -236,6 +238,8 @@
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
+            // DESTRAVA A TELA DE OCULTAR CASO O SERVER ENVIE UMA PALAVRA NOVA ("JÁ FOI")
+            if (!dados.ja_confirmou) { jogador_papel_oculto = false; }
             if (jogador_papel_oculto) return;
 
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
