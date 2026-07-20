@@ -22,7 +22,6 @@ if DATABASE_URL.startswith("postgres://"):
 
 engine = create_engine(DATABASE_URL, poolclass=NullPool)
 
-# BANCO EXPANDIDO: 50 Emojis!
 EMOJIS_DISPONIVEIS = [
     "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", 
     "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", 
@@ -163,7 +162,10 @@ def enviar_estado_jogador(sala, jogador):
             if sala.get('trapaca_ativo_atual', False): payload['equipe'] = [i for i in sala.get('impostores_atuais', []) if i != jogador['nome']]
         else: payload['palavra_ou_dica'] = sala.get('palavra_atual', '')
         
-        socketio.emit('distribuir_papeis', payload, to=sid)
+        if len(sala['jogadores_prontos']) >= len(sala['jogadores']) and sala.get('modo_jogo') == 'host_jogador':
+            socketio.emit('todos_leram_papeis_global', {'tempo': sala['tempo_discussao'], 'primeiro': sala.get('primeiro_falar')}, to=sid)
+        else:
+            socketio.emit('distribuir_papeis', payload, to=sid)
             
     elif fase == 'votacao':
         jogadores_info = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
@@ -184,13 +186,18 @@ def monitorar_confirmacoes(codigo, fase_esperada, iteracao_id):
 
 def checar_todos_leram(codigo):
     sala = salas_ativas.get(codigo)
-    if not sala: return
+    # TRAVA: Se o debate já começou, não faz nada (Evita reiniciar o Timer)
+    if not sala or sala.get('debate_iniciado', False): return
+    
     total_prontos = len(sala['jogadores_prontos'])
     total_jogadores = len(sala['jogadores'])
     emit('progresso_leitura_host', {'prontos': total_prontos, 'total': total_jogadores}, to=sala['host_sid'])
     
     if total_jogadores > 0 and total_prontos >= total_jogadores:
+        sala['debate_iniciado'] = True # Aciona a trava de Timer
         emit('todos_leram_papeis', {'tempo': sala['tempo_discussao']}, to=sala['host_sid'])
+        if sala.get('modo_jogo') == 'host_jogador':
+            emit('todos_leram_papeis_global', {'tempo': sala['tempo_discussao'], 'primeiro': sala.get('primeiro_falar')}, to=codigo)
 
 @socketio.on('confirmar_status')
 def confirmar_status(dados):
@@ -224,7 +231,7 @@ def criar_sala():
         'fila_interrogatorio': [], 'fase_atual': 'lobby', 'iteracao_fase': 0,
         'confirmacoes_status': set(), 'jogadores_prontos': set(), 'jogadores_ja_foi': set(),
         'impostores_atuais': [], 'palavra_atual': '', 'tempo_discussao': 120, 'votos': {},
-        'modo_jogo': 'host'
+        'modo_jogo': 'host', 'debate_iniciado': False
     }
     carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
@@ -368,6 +375,7 @@ def forcar_lobby(dados):
     sala = salas_ativas.get(codigo)
     if sala:
         sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
+        sala['debate_iniciado'] = False # Destrava o timer
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
         socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
         
@@ -386,6 +394,7 @@ def iniciar_partida(dados):
     sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
     sala['confirmacoes_status'] = set(); sala['jogadores_prontos'] = set(); sala['jogadores_ja_foi'] = set(); sala['votos'] = {}
     sala['tempo_discussao'] = int(dados.get('tempo', 120))
+    sala['debate_iniciado'] = False # Destrava o timer para a rodada
 
     categoria = dados.get('categoria')
     if categoria == "Aleatório": categoria = random.choice(list(BANCO_PALAVRAS.keys()))
@@ -450,6 +459,7 @@ def clicou_ja_foi(dados):
     if len(sala['jogadores_ja_foi']) >= len(sala['jogadores']):
         sala['jogadores_ja_foi'] = set(); sala['jogadores_prontos'] = set(); sala['confirmacoes_status'] = set()
         sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
+        sala['debate_iniciado'] = False # Destrava o timer
 
         categoria = sala['tema_atual']
         opcoes = [p for p in BANCO_PALAVRAS[categoria] if p[0] not in sala['palavras_usadas']]
@@ -499,11 +509,11 @@ def receber_voto(dados):
 
 def encerrar_votacao_interna(codigo):
     sala = salas_ativas.get(codigo)
-    if not sala: return
+    # TRAVA DUPLA CONTRA RACE CONDITION NO BANCO DE DADOS
+    if not sala or sala['fase_atual'] == 'resultado': return
 
     sala['fase_atual'] = 'resultado'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
     
-    # ENGINE DE VOTAÇÃO: >= 50% dos Inocentes base!
     votos = sala.get('votos', {})
     total_inocentes_mesa = sum(1 for j in sala['jogadores'] if j['nome'] not in sala['impostores_atuais'])
     limite_para_pegar = max(1, total_inocentes_mesa / 2.0)
@@ -561,6 +571,8 @@ def encerrar_votacao_interna(codigo):
     socketio.start_background_task(monitorar_confirmacoes, codigo, 'resultado', sala['iteracao_fase'])
     
     emit('resultado_votacao_host', payload_resultado, to=sala['host_sid'])
+    if sala.get('modo_jogo') == 'host_jogador':
+        emit('resultado_votacao_global', payload_resultado, to=codigo)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=8080)
