@@ -238,7 +238,7 @@
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
-            // DESTRAVA A TELA DE OCULTAR CASO O SERVER ENVIE UMA PALAVRA NOVA ("JÁ FOI")
+            // DESTRAVA A TELA CASO A PALAVRA SEJA PULADA
             if (!dados.ja_confirmou) { jogador_papel_oculto = false; }
             if (jogador_papel_oculto) return;
 
