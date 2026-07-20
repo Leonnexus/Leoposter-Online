@@ -36,13 +36,12 @@
         #cel-ampulheta-container { width: 100%; height: 20px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 15px; border: 2px solid #222; }
         #cel-ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
 
-        /* Nova Classe para a Tela de Resultados na Horizontal caso caiba */
         .resultado-grid-celular { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <button id="btn-sair-sala" class="escondido" onclick="sairDaSala()">⬅ Sair</button>
+    <button id="btn-sair-sala" class="escondido" onclick="sairDaSala()">⬅ Sair da Sala</button>
 
     <div class="box" id="tela-login">
         <h1 style="margin: 0 0 5px 0; font-size: 32px; letter-spacing: 1px;">Leoposter</h1>
@@ -70,7 +69,9 @@
     <div id="tela-jogo" class="escondido">
         <h3 id="tema-display" style="color: #777; text-transform: uppercase; margin-top: 0; letter-spacing: 1px;">TEMA</h3>
         <h2 id="papel-titulo" style="font-size: 26px; margin: 8px 0;">INOCENTE / IMPOSTOR</h2>
+        
         <div id="caos-alerta" class="escondido" style="color: #f1c40f; font-weight: bold; font-size: 13px; margin-bottom: 8px;">⚠️ ADVERTÊNCIA: CAOS ATIVO</div>
+        
         <p style="color: #666; margin-bottom: 0;" id="subtitulo">Sua Informação Secreta:</p>
         <div class="palavra-gigante" id="palavra-secreta">----</div>
         <p id="trapaca-alerta" class="escondido" style="color: #e67e22; font-weight: bold; font-size: 13px; background: #2c1a0a; padding: 8px; border-radius: 4px;">Cúmplices: <span id="equipe-nomes"></span></p>
@@ -85,7 +86,6 @@
         <button class="btn-ja-foi" onclick="clicouJaFoi()">Palavra Repetida (Já foi!)</button>
     </div>
 
-    <!-- TELA DO HOST/JOGADOR (Debate e Timer) -->
     <div class="box escondido" id="tela-debate">
         <h2 style="color:#f1c40f; font-size:22px; margin-top:0;">Quem inicia o debate:</h2>
         <p id="cel-quem-inicia" style="font-size:28px; font-weight:bold; margin-top:0;">---</p>
@@ -98,14 +98,13 @@
     <div class="box escondido" id="tela-votacao">
         <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO SECRETA</h2>
         <div id="aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
-            ⚠️ <strong>Alerta:</strong> O Elemento do Caos alterou a quantidade de Impostores nesta rodada!
+            ⚠️ O Caos alterou a quantidade de Impostores nesta rodada!
         </div>
         <p style="color: #aaa; font-size: 16px; margin-bottom: 15px;" id="texto-alvo-votos">Selecione <strong style="color:white" id="qtd-alvo">1</strong> suspeito(s):</p>
         <div id="botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;"></div>
         <button id="btn-submeter-voto" onclick="submeterVoto()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto</button>
     </div>
 
-    <!-- TELAS FINAIS DO HOST/JOGADOR (Resultados) -->
     <div class="box escondido" id="tela-suspense" style="padding: 50px 20px;">
         <h2 style="font-size: 25px; color: #aaa; margin: 0;">Revelando em...</h2>
         <div id="cel-contagem-regressiva" style="font-size: 100px; font-weight: bold; color: #f1c40f; margin: 0;">3</div>
@@ -113,16 +112,12 @@
 
     <div class="box escondido" id="tela-resultado" style="width: 95%; max-width: 500px; padding: 15px;">
         <h1 style="color: #e74c3c; font-size: 26px; margin-top:0;" id="cel-titulo-revelacao">E o Protagonista foi...</h1>
-        
         <div id="cel-bloco-impostores" class="resultado-grid-celular"></div>
-        
         <div id="cel-bloco-outros" class="escondido" style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
             <p style="color: #aaa; font-size: 14px; margin-bottom: 5px;">Outros mais votados:</p>
             <ul id="cel-lista-outros" style="list-style: none; padding: 0; font-size: 16px; margin:0;"></ul>
         </div>
-
         <p id="cel-palavra-revelada" style="font-size: 16px; color: #7f8c8d; margin-top: 20px; font-weight: bold;"></p>
-        
         <h3 style="color: #3498db; margin-top: 20px; font-size: 16px;">PLACAR DA SESSÃO</h3>
         <ul id="cel-lista-placar" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 14px; margin-bottom:0;"></ul>
     </div>
@@ -138,6 +133,8 @@
         let votos_selecionados = [];
         let max_votos_permitidos = 1;
         let celIntervaloTimer = null;
+        let jogador_papel_oculto = false;
+        let jogadorFaseVotacaoRenderizada = false;
 
         window.onload = () => {
             const nomeSalvo = localStorage.getItem('leoposter_nome');
@@ -149,9 +146,7 @@
             }
         };
 
-        socket.on('connect', () => {
-            if (meu_nome_atual && codigo_atual) socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual });
-        });
+        socket.on('connect', () => { if (meu_nome_atual && codigo_atual) socket.emit('entrar_na_sala', { nome: meu_nome_atual, codigo: codigo_atual }); });
 
         function entrar() {
             meu_nome_atual = document.getElementById('ipt-nome').value.trim();
@@ -182,11 +177,7 @@
             document.getElementById('tela-login').classList.remove('escondido');
         });
 
-        socket.on('foi_expulso', () => {
-            localStorage.clear();
-            alert("Você foi removido da sala pelo Host principal.");
-            location.reload();
-        });
+        socket.on('foi_expulso', () => { localStorage.clear(); alert("Você foi removido da sala pelo Host principal."); location.reload(); });
 
         socket.on('entrada_sucesso', (dados) => {
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
@@ -204,7 +195,6 @@
             const grade = document.getElementById('grade-emojis');
             if(!grade) return;
             grade.innerHTML = '';
-
             const meuJogador = listaJogadoresCache.find(j => j.nome === meu_nome_atual);
             if (meuJogador) document.getElementById('meu-emoji-display').innerText = meuJogador.emoji;
 
@@ -215,11 +205,9 @@
 
                 if (dono) {
                     if (dono.nome === meu_nome_atual) {
-                        container.classList.add('selecionado');
-                        container.innerText = emoji;
+                        container.classList.add('selecionado'); container.innerText = emoji;
                     } else {
-                        container.classList.add('ocupado');
-                        container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`;
+                        container.classList.add('ocupado'); container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`;
                     }
                 } else {
                     container.innerText = emoji;
@@ -234,12 +222,16 @@
             clearInterval(celIntervaloTimer);
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-espera').classList.remove('escondido');
+            jogador_papel_oculto = false;
+            jogadorFaseVotacaoRenderizada = false;
             renderizarGradeEmojis();
         });
 
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             
+            if (jogador_papel_oculto) return;
+
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
@@ -280,6 +272,7 @@
         });
 
         function esconderTela() {
+            jogador_papel_oculto = true;
             document.getElementById('tela-jogo').classList.add('escondido');
             document.getElementById('tela-escondida').classList.remove('escondido');
             socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meu_nome_atual });
@@ -288,13 +281,10 @@
         function clicouJaFoi() {
             socket.emit('clicou_ja_foi', { codigo: codigo_atual, nome: meu_nome_atual });
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                btn.innerText = "Aguardando os outros...";
+                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Aguardando os outros...";
             });
         }
 
-        // --- MODO HOST/JOGADOR (Visões Compartilhadas Globais) ---
         socket.on('todos_leram_papeis_global', (dados) => {
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-debate').classList.remove('escondido');
@@ -320,6 +310,10 @@
 
         socket.on('ir_para_tela_votacao', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'votacao' });
+            
+            if (jogadorFaseVotacaoRenderizada) return;
+            jogadorFaseVotacaoRenderizada = true;
+
             clearInterval(celIntervaloTimer);
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             
@@ -413,7 +407,7 @@
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
                 let corStatus = d.status.includes('pego') || d.status.includes('executado') ? '#e74c3c' : '#2ecc71';
                 containerHtml += `
-                    <div style="background: #222; padding: 12px; border-radius: 10px; border: 2px solid ${corPapel}; width: 120px; flex-shrink: 0;">
+                    <div style="background: #222; padding: 12px; border-radius: 10px; border: 2px solid ${corPapel}; width: 120px; flex-shrink: 0; text-align: center;">
                         <div style="font-size: 50px; line-height: 1;">${d.emoji}</div>
                         <div style="font-size: 16px; font-weight: bold; color: white; margin-top: 8px;">${d.nome}</div>
                         <div style="font-size: 13px; color: ${corPapel}; font-weight: bold; text-transform: uppercase;">${d.papel}</div>
