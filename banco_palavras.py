@@ -135,7 +135,7 @@ BANCO_PALAVRAS = {
         ("Minhoca", "Terra"), ("Ovelha", "Lã"), ("Raposa", "Astúcia"), ("Rinoceronte", "Chifre"), ("Hipopótamo", "Pesado"),
         ("Zebra", "África"), ("Canguru", "Bolsa"), ("Coala", "Eucalipto"), ("Panda", "Bambu"), ("Gorila", "Forte"),
         ("Coruja", "Visão"), ("Águia", "Garras"), ("Pinguim", "Gelo"), ("Avestruz", "Corre"), ("Camelo", "Deserto")
-        ],
+    ],
     "Personagens pt.2": [
         ("Mickey Mouse", "É o rosto principal de um império gigante"),
         ("Pato Donald", "Sua paciência é famosa por acabar muito rápido"),
@@ -169,7 +169,7 @@ BANCO_PALAVRAS = {
         ("Senhor Barriga (do Chaves)", "Seu trabalho exige cobranças constantes e uma paciência absurda"),
         ("Dona Clotilde / Bruxa do 71 (do Chaves)", "Tem uma fama injusta por causa de julgamentos precipitados"),
         ("Nhonho (do Chaves)", "Sua situação financeira é nitidamente melhor que a de seus colegas"),
-        ("Jaiminho, o Carteiro (do Chaves)", "Tem muita preguiça de exercer a sua função")
+        ("Jaiminho, o Carteiro (do Chaves)", "Tem muita preguiça de exercer a sua função"),
     ],
     #"Teste": [
         #("palavra", "dica vaga")
