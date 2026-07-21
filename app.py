@@ -241,16 +241,14 @@ def tela_admin(): return render_template('admin.html')
 @app.route('/testador')
 def tela_testador(): return render_template('testador.html')
 
-# === NOVA LÓGICA DE GESTÃO DE SALA ÚNICA E RECUPERAÇÃO ===
 @socketio.on('verificar_sala_existente')
 def verificar_sala_existente(dados):
     if salas_ativas:
-        codigo = list(salas_ativas.keys())[0] # Pega a única sala global do servidor
+        codigo = list(salas_ativas.keys())[0] 
         sala = salas_ativas[codigo]
         sala['host_sid'] = request.sid
         join_room(codigo)
         
-        # Recupera a identidade do host se ele também for jogador
         nome_host = dados.get('nome_host') if dados else None
         if nome_host:
             for j in sala['jogadores']:
@@ -259,24 +257,18 @@ def verificar_sala_existente(dados):
                     break
         
         estado = {
-            'codigo': codigo,
-            'fase_atual': sala['fase_atual'],
+            'codigo': codigo, 'fase_atual': sala['fase_atual'],
             'jogadores': [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']],
-            'temas': list(BANCO_PALAVRAS.keys()),
-            'modo_jogo': sala.get('modo_jogo', 'host'),
-            'primeiro_falar': sala.get('primeiro_falar', ''),
-            'votos_computados': len(sala.get('votos', {})),
-            'total_jogadores': len(sala['jogadores']),
-            'ultimo_resultado': sala.get('ultimo_resultado', {})
+            'temas': list(BANCO_PALAVRAS.keys()), 'modo_jogo': sala.get('modo_jogo', 'host'),
+            'primeiro_falar': sala.get('primeiro_falar', ''), 'votos_computados': len(sala.get('votos', {})),
+            'total_jogadores': len(sala['jogadores']), 'ultimo_resultado': sala.get('ultimo_resultado', {})
         }
         emit('sala_recuperada', estado)
-    else:
-        emit('nenhuma_sala_ativa')
+    else: emit('nenhuma_sala_ativa')
 
 @socketio.on('criar_sala')
 def criar_sala():
-    salas_ativas.clear() # GARANTE A REGRA DE SALA ÚNICA NO SERVIDOR
-    
+    salas_ativas.clear() 
     codigo = gerar_codigo_sala()
     salas_ativas[codigo] = {
         'host_sid': request.sid, 'id_partida': str(uuid.uuid4())[:8], 'jogadores': [],
@@ -295,9 +287,8 @@ def criar_sala():
 def destruir_sala(dados):
     if salas_ativas:
         codigo = list(salas_ativas.keys())[0]
-        emit('sala_destruida', {}, to=codigo) # Avisa os celulares para voltarem ao login
+        emit('sala_destruida', {}, to=codigo) 
         salas_ativas.clear()
-# =========================================================
 
 @socketio.on('solicitar_coroacao')
 def solicitar_coroacao(dados):
@@ -440,6 +431,20 @@ def voltar_para_lobby(dados):
     if sala:
         sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
         sala['debate_iniciado'] = False
+        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
+        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
+        
+        emit('retorno_lobby_host', {}, to=sala['host_sid'])
+        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
+        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
+
+@socketio.on('forcar_lobby')
+def forcar_lobby(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if sala:
+        sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
+        sala['debate_iniciado'] = False 
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
         socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
         
