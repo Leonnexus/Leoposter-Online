@@ -98,7 +98,7 @@
     </div>
 
     <div class="container escondido" id="painel-lobby">
-        <button onclick="forcarLobbyEInicio()" style="background-color: #555; padding: 8px 15px; width: auto; font-size: 14px; float: left; margin-top: -10px;">⬅ Voltar ao Início</button>
+        <button onclick="destruirSala()" style="background-color: #c0392b; padding: 8px 15px; width: auto; font-size: 14px; float: left; margin-top: -10px;">🛑 Encerrar Sala e Voltar ao Menu</button>
         <div style="clear: both;"></div>
 
         <h2>Código da Sala:</h2>
@@ -153,7 +153,7 @@
     <div id="slide-overlay" class="inativo">
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
         <div id="slide-content" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-            <button onclick="closeSlide()" style="background-color: #555; width: 100%; max-width: 360px; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 20px;">⬅ Voltar para Configurações da Sala</button>
+            <button onclick="closeSlide()" style="background-color: #555; width: 100%; max-width: 360px; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 20px;">⬅ Voltar para a Tela Principal</button>
             
             <div class="drawer-box" id="host-config-modo">
                 <label style="color: white; margin-bottom: 10px; display: block; font-weight: bold;">Modo de Transmissão:</label>
@@ -168,8 +168,8 @@
             </div>
 
             <div class="drawer-box escondido" id="host-painel-login">
-                <h3 style="color: #3498db; margin-top:0;">Criar Perfil do Host</h3>
-                <input type="text" id="host-nome-input" placeholder="Seu Nome de Jogador" style="margin-bottom: 15px; width: 100%;">
+                <h3 style="color: #3498db; margin-top:0;">Criar Perfil de Jogador</h3>
+                <input type="text" id="host-nome-input" placeholder="Seu Nome de Jogador" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
                 <button id="btn-entrar-host" onclick="entrarHostComoJogador()" style="background-color: #2980b9;">Conectar à Partida</button>
             </div>
 
@@ -197,7 +197,7 @@
             </div>
 
             <div class="drawer-box escondido" id="host-painel-votacao-interna" style="border: 2px solid #e74c3c;">
-                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO</h2>
+                <h2 style="margin-top: 0; color: #e74c3c;">VOTAÇÃO DO HOST</h2>
                 <div id="host-aviso-caos-votacao" class="escondido" style="background: #2c1a0a; border-left: 4px solid #f1c40f; padding: 8px; margin-bottom: 15px; font-size: 13px; color: #f1c40f;">
                     ⚠️ O Caos alterou a quantidade de Impostores!
                 </div>
@@ -209,7 +209,7 @@
             <div class="drawer-box escondido" id="host-painel-cadeado" style="border: 2px solid #555; padding: 40px;">
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
                 <h2>Área Restrita</h2>
-                <p style="color: #aaa; font-size: 14px;">Arraste a tela para a direita ou feche a aba para voltar ao painel principal.</p>
+                <p style="color: #aaa; font-size: 14px;">Arraste a tela para a direita ou clique no botão acima para retornar ao painel.</p>
             </div>
         </div>
     </div>
@@ -232,14 +232,14 @@
             <p style="font-size: 30px; font-weight: bold; color: #f39c12; margin-top: 10px;" id="timer-restante">--</p>
             <button onclick="pularTimer()" style="background-color: #888; width: auto; font-size: 14px;">Pular Tempo (Forçar Votação)</button>
         </div>
-        <button onclick="forcarLobby()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">⏹ Cancelar e Voltar ao Lobby</button>
+        <button onclick="destruirSala()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">🛑 Encerrar Partida e Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-votacao">
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
         <p style="color: #aaa; font-style: italic;">Aguardando todos os jogadores submeterem seus vereditos...</p>
-        <button onclick="forcarLobby()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">⏹ Cancelar e Voltar ao Lobby</button>
+        <button onclick="destruirSala()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">🛑 Encerrar Partida e Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-suspense" style="padding: 100px 20px;">
@@ -257,8 +257,9 @@
         <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
+        
         <button onclick="voltarAoLobby()" style="background-color: #2ecc71;">Voltar ao Lobby (Próxima Rodada)</button>
-        <button onclick="forcarLobbyEInicio()" style="background-color: #c0392b; margin-top: 10px;">Encerrar Sala e Voltar ao Menu</button>
+        <button onclick="destruirSala()" style="background-color: #c0392b; margin-top: 10px;">🛑 Encerrar Partida e Voltar ao Menu</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -284,38 +285,81 @@
         let host_papel_oculto = false;
         let hostFaseVotacaoRenderizada = false;
 
-        window.onload = () => { window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); };
+        window.onload = () => { 
+            window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); 
+        };
 
-        socket.on('connect', () => { if (codigo_atual) socket.emit('host_reconectou', { codigo: codigo_atual }); });
-        socket.on('sala_encerrada_por_inatividade', () => { alert("Servidor reiniciado. Crie uma nova partida."); location.reload(); });
+        socket.on('connect', () => { 
+            const nomeSalvo = localStorage.getItem('leoposter_host_nome');
+            socket.emit('verificar_sala_existente', { nome_host: nomeSalvo }); 
+        });
+
+        socket.on('nenhuma_sala_ativa', () => {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
+            document.getElementById('painel-inicio').classList.remove('escondido');
+        });
+
+        socket.on('sala_recuperada', (dados) => {
+            codigo_atual = dados.codigo;
+            modoJogoAtual = dados.modo_jogo;
+            
+            const selectTema = document.getElementById('cfg-tema');
+            if (selectTema.options.length <= 1) {
+                selectTema.innerHTML = '<option value="Aleatório">🎲 Escolha Aleatória</option>';
+                if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
+            }
+            
+            document.getElementById('txt-codigo').innerText = codigo_atual;
+            listaJogadoresCache = dados.jogadores;
+            
+            const nomeSalvo = localStorage.getItem('leoposter_host_nome');
+            const euEstouNaSala = listaJogadoresCache.some(j => j.nome === nomeSalvo);
+            
+            document.getElementById('cfg-modo-jogo-toggle').checked = (modoJogoAtual === 'host_jogador');
+            document.getElementById('cfg-modo-jogo-toggle-drawer').checked = (modoJogoAtual === 'host_jogador');
+            alternarModoJogoSemEmitir();
+
+            if (euEstouNaSala && modoJogoAtual === 'host_jogador') {
+                souJogador = true;
+                meuNomeHost = nomeSalvo;
+                document.getElementById('host-painel-login').classList.add('escondido');
+                document.getElementById('host-painel-espera').classList.remove('escondido');
+                document.getElementById('host-meu-nome-display').innerText = meuNomeHost;
+            }
+
+            atualizarListaJogadoresUI(dados.jogadores);
+            validarBotaoIniciar();
+
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
+            closeSlide();
+            
+            if (dados.fase_atual === 'lobby') {
+                document.getElementById('painel-lobby').classList.remove('escondido');
+            } else if (dados.fase_atual === 'revelacao') {
+                document.getElementById('painel-jogo').classList.remove('escondido');
+                document.getElementById('primeiro-falar').innerText = dados.primeiro_falar || "---";
+            } else if (dados.fase_atual === 'votacao') {
+                document.getElementById('painel-votacao').classList.remove('escondido');
+                document.getElementById('votos-contagem').innerText = dados.votos_computados;
+                document.getElementById('votos-total').innerText = dados.total_jogadores;
+            } else if (dados.fase_atual === 'resultado') {
+                document.getElementById('painel-resultado').classList.remove('escondido');
+                if (dados.ultimo_resultado && dados.ultimo_resultado.destaques) {
+                    mostrarResultadoFinal(dados.ultimo_resultado);
+                }
+            }
+        });
 
         function criarSala() { socket.emit('criar_sala'); }
 
-        function fecharLobby() { document.getElementById('painel-lobby').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); souJogador = false; meuNomeHost = ""; }
-        
-        function forcarLobby() { if(confirm("Deseja interromper a partida atual e mandar todos de volta para o Lobby?")) { socket.emit('forcar_lobby', { codigo: codigo_atual }); } }
-        
-        function forcarLobbyEInicio() {
-            if(confirm("Deseja encerrar esta sala e voltar à Tela Inicial para todos?")) {
-                socket.emit('forcar_lobby', { codigo: codigo_atual });
+        function destruirSala() {
+            if(confirm("Deseja encerrar a sala e desconectar todos os celulares permanentemente?")) {
+                socket.emit('destruir_sala', {});
+                localStorage.removeItem('leoposter_host_nome');
+                souJogador = false; meuNomeHost = "";
                 setTimeout(() => { location.reload(); }, 500);
             }
         }
-
-        socket.on('retorno_lobby_host', () => {
-            clearInterval(intervaloTimer);
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
-            closeSlide();
-            document.getElementById('painel-lobby').classList.remove('escondido');
-            host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
-            
-            if (souJogador && modoJogoAtual === 'host_jogador') {
-                document.getElementById('host-painel-secreto').classList.add('escondido');
-                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
-                document.getElementById('host-painel-cadeado').classList.add('escondido');
-                document.getElementById('host-painel-espera').classList.remove('escondido');
-            }
-        });
 
         socket.on('sala_criada_sucesso', (dados) => {
             codigo_atual = dados.codigo;
@@ -328,7 +372,6 @@
             if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
         });
 
-        // --- ABA DESLIZANTE DO HOST ---
         let slideOverlay = document.getElementById('slide-overlay');
         let slideIsOpen = false; let startX = 0;
         function toggleSlide() { if(slideIsOpen) closeSlide(); else openSlide(); }
@@ -347,22 +390,30 @@
             alternarModoJogo();
         }
 
-        function alternarModoJogo() {
+        function alternarModoJogoSemEmitir() {
             const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
-            document.getElementById('cfg-modo-jogo-toggle-drawer').checked = toggle;
-            modoJogoAtual = toggle ? 'host_jogador' : 'host';
-            
             document.getElementById('lbl-modo-host').style.color = toggle ? '#555' : '#3498db';
             document.getElementById('lbl-modo-jogador').style.color = toggle ? '#3498db' : '#555';
             document.getElementById('lbl-modo-host-drawer').style.color = toggle ? '#555' : '#3498db';
             document.getElementById('lbl-modo-jogador-drawer').style.color = toggle ? '#3498db' : '#555';
 
-            if (modoJogoAtual === 'host_jogador') {
+            if (toggle) {
                 document.getElementById('slide-overlay').classList.remove('inativo');
-                document.getElementById('host-painel-login').classList.remove('escondido');
-                if(!souJogador) openSlide();
+                document.getElementById('host-config-modo').classList.remove('escondido');
+                if(!souJogador) document.getElementById('host-painel-login').classList.remove('escondido');
             } else {
                 document.getElementById('slide-overlay').classList.add('inativo');
+            }
+        }
+
+        function alternarModoJogo() {
+            alternarModoJogoSemEmitir();
+            const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
+            modoJogoAtual = toggle ? 'host_jogador' : 'host';
+            
+            if (toggle) {
+                if(!souJogador) openSlide();
+            } else {
                 closeSlide();
                 if(souJogador) { socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost }); }
             }
@@ -377,6 +428,7 @@
         socket.on('entrada_sucesso', (dados) => {
             if (dados.nome === meuNomeHost) {
                 souJogador = true;
+                localStorage.setItem('leoposter_host_nome', meuNomeHost);
                 document.getElementById('host-painel-login').classList.add('escondido');
                 document.getElementById('host-painel-espera').classList.remove('escondido');
                 document.getElementById('host-meu-nome-display').innerText = dados.nome;
@@ -386,14 +438,18 @@
 
         socket.on('lista_jogadores_atualizada', (dados) => {
             listaJogadoresCache = dados.jogadores;
+            atualizarListaJogadoresUI(dados.jogadores);
+        });
+
+        function atualizarListaJogadoresUI(jogadores) {
             const ul = document.getElementById('lista-jogadores'); ul.innerHTML = '';
-            dados.jogadores.forEach(j => {
+            jogadores.forEach(j => {
                 ul.innerHTML += `<li class="jogador-card"><span>${j.emoji} <strong>${j.nome}</strong></span>
                 <button class="btn-expulsar" onclick="expulsar('${j.nome}')" title="Expulsar">✖</button></li>`;
             });
-            document.getElementById('contagem').innerText = dados.jogadores.length;
+            document.getElementById('contagem').innerText = jogadores.length;
             renderizarGradeEmojisHost(); validarBotaoIniciar();
-        });
+        }
 
         function validarBotaoIniciar() {
             const btn1 = document.getElementById('btn-iniciar');
@@ -429,6 +485,7 @@
                 socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
                 if (nomeJogador === meuNomeHost) {
                     souJogador = false; meuNomeHost = "";
+                    localStorage.removeItem('leoposter_host_nome');
                     document.getElementById('host-painel-espera').classList.add('escondido');
                     document.getElementById('host-nome-input').value = "";
                     document.getElementById('host-painel-login').classList.remove('escondido');
@@ -442,6 +499,7 @@
         function iniciarPartida() {
             host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
             document.getElementById('host-painel-espera').classList.add('escondido');
+            document.getElementById('host-config-modo').classList.add('escondido');
             document.getElementById('btn-iniciar-drawer').classList.add('escondido');
             socket.emit('iniciar_partida', { codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value, imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value, trapaca: document.getElementById('cfg-trapaca').value, tempo: cfgTempoGlobal });
         }
@@ -450,7 +508,6 @@
             if (modoJogoAtual === 'host_jogador' && souJogador) {
                 socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'revelacao' });
                 
-                // DESTRAVA A TELA CASO A PALAVRA SEJA PULADA
                 if (!dados.ja_confirmou) { host_papel_oculto = false; }
                 if (host_papel_oculto) return;
                 
@@ -502,7 +559,7 @@
                     }
                 });
                 
-                openSlide(); // Auto-abre a gaveta!
+                openSlide(); // Auto-abre a gaveta pro Host votar!
             }
         });
 
@@ -516,17 +573,21 @@
             if (hostVotosSelecionados.length === hostMaxVotos) {
                 socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
                 document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); 
-                closeSlide(); // Auto-fecha a gaveta!
+                closeSlide(); // Auto-fecha a gaveta ao confirmar o voto!
             }
         }
 
         socket.on('partida_iniciada_host', (dados) => {
             clearInterval(intervaloTimer);
-            if (modoJogoAtual === 'host') {
-                document.getElementById('painel-lobby').classList.add('escondido'); document.getElementById('painel-jogo').classList.remove('escondido');
-            }
-            document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido');
-            document.getElementById('primeiro-falar').innerText = dados.primeiro; document.getElementById('leitura-contagem').innerText = "0"; document.getElementById('leitura-total').innerText = dados.total_jogadores;
+            // Agora a TV aparece em ambos os modos, desabilitando as restrições que impediam a renderização
+            document.getElementById('painel-lobby').classList.add('escondido'); 
+            document.getElementById('painel-jogo').classList.remove('escondido');
+            
+            document.getElementById('bloco-timer').classList.add('escondido'); 
+            document.getElementById('bloco-aguardando').classList.remove('escondido');
+            document.getElementById('primeiro-falar').innerText = dados.primeiro; 
+            document.getElementById('leitura-contagem').innerText = "0"; 
+            document.getElementById('leitura-total').innerText = dados.total_jogadores;
         });
 
         socket.on('progresso_leitura_host', (dados) => { document.getElementById('leitura-contagem').innerText = dados.prontos; document.getElementById('leitura-total').innerText = dados.total; });
@@ -548,10 +609,13 @@
         function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
 
         socket.on('votacao_iniciada_host', (dados) => {
-            if (modoJogoAtual === 'host') {
-                document.getElementById('painel-jogo').classList.add('escondido'); document.getElementById('painel-votacao').classList.remove('escondido');
-            }
-            document.getElementById('votos-contagem').innerText = "0"; if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
+            document.getElementById('painel-jogo').classList.add('escondido'); 
+            document.getElementById('painel-votacao').classList.remove('escondido');
+            
+            document.getElementById('votos-contagem').innerText = "0"; 
+            if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
+            
+            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
         });
 
         socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
@@ -562,7 +626,12 @@
             let count = 3; document.getElementById('contagem-regressiva').innerText = count;
             let interval = setInterval(() => {
                 count--;
-                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } else { clearInterval(interval); document.getElementById('painel-suspense').classList.add('escondido'); mostrarResultadoFinal(dados); }
+                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } 
+                else {
+                    clearInterval(interval);
+                    document.getElementById('painel-suspense').classList.add('escondido');
+                    mostrarResultadoFinal(dados);
+                }
             }, 1000);
         });
 
@@ -584,14 +653,37 @@
             for (const [nome, pts] of Object.entries(dados.pontos)) { ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`; }
         }
 
-        function voltarAoLobby() { socket.emit('voltar_para_lobby', { codigo: codigo_atual }); }
+        function voltarAoLobby() { 
+            document.getElementById('host-config-modo').classList.remove('escondido');
+            socket.emit('voltar_para_lobby', { codigo: codigo_atual }); 
+        }
+
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
-        socket.on('receber_coroacao', (dados) => { /*...*/ });
+        socket.on('receber_coroacao', (dados) => {
+            document.getElementById('painel-inicio').classList.add('escondido');
+            const painel = document.getElementById('painel-coroacao');
+            painel.classList.remove('escondido');
+            document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
+            const div = document.getElementById('coroacao-conteudo');
+            div.innerHTML = '';
+            if(dados.ranking.length === 0) { div.innerHTML = "<p>Nenhum dado registrado para este período.</p>"; return; }
+            dados.ranking.forEach((pos, idx) => {
+                let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
+                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
+            });
+        });
+
         function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
         function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
-        function deletarJogadorDB() { let nome = document.getElementById('ipt-del-jogador').value.trim(); if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) { socket.emit('deletar_jogador_banco', { nome: nome }); document.getElementById('ipt-del-jogador').value = ""; } }
+        function deletarJogadorDB() {
+            let nome = document.getElementById('ipt-del-jogador').value.trim();
+            if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) {
+                socket.emit('deletar_jogador_banco', { nome: nome });
+                document.getElementById('ipt-del-jogador').value = "";
+            }
+        }
         socket.on('alerta_host', (dados) => { alert(dados.mensagem); if(dados.mensagem.includes("sucesso")) fecharPainelBanco(); });
     </script>
 </body>
