@@ -140,9 +140,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 salas_ativas = {}
 
 def gerar_codigo_sala():
-    while True:
-        codigo = ''.join(random.choices(string.ascii_uppercase, k=4))
-        if codigo not in salas_ativas: return codigo
+    return ''.join(random.choices(string.ascii_uppercase, k=4))
 
 def enviar_estado_jogador(sala, jogador):
     fase = sala.get('fase_atual')
@@ -243,16 +241,42 @@ def tela_admin(): return render_template('admin.html')
 @app.route('/testador')
 def tela_testador(): return render_template('testador.html')
 
-@socketio.on('host_reconectou')
-def host_reconectou(dados):
-    codigo = dados.get('codigo')
-    if codigo in salas_ativas:
-        salas_ativas[codigo]['host_sid'] = request.sid
+# === NOVA LÓGICA DE GESTÃO DE SALA ÚNICA E RECUPERAÇÃO ===
+@socketio.on('verificar_sala_existente')
+def verificar_sala_existente(dados):
+    if salas_ativas:
+        codigo = list(salas_ativas.keys())[0] # Pega a única sala global do servidor
+        sala = salas_ativas[codigo]
+        sala['host_sid'] = request.sid
+        join_room(codigo)
+        
+        # Recupera a identidade do host se ele também for jogador
+        nome_host = dados.get('nome_host') if dados else None
+        if nome_host:
+            for j in sala['jogadores']:
+                if j['nome'] == nome_host:
+                    j['sid'] = request.sid
+                    break
+        
+        estado = {
+            'codigo': codigo,
+            'fase_atual': sala['fase_atual'],
+            'jogadores': [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']],
+            'temas': list(BANCO_PALAVRAS.keys()),
+            'modo_jogo': sala.get('modo_jogo', 'host'),
+            'primeiro_falar': sala.get('primeiro_falar', ''),
+            'votos_computados': len(sala.get('votos', {})),
+            'total_jogadores': len(sala['jogadores']),
+            'ultimo_resultado': sala.get('ultimo_resultado', {})
+        }
+        emit('sala_recuperada', estado)
     else:
-        emit('sala_encerrada_por_inatividade', {}, to=request.sid)
+        emit('nenhuma_sala_ativa')
 
 @socketio.on('criar_sala')
 def criar_sala():
+    salas_ativas.clear() # GARANTE A REGRA DE SALA ÚNICA NO SERVIDOR
+    
     codigo = gerar_codigo_sala()
     salas_ativas[codigo] = {
         'host_sid': request.sid, 'id_partida': str(uuid.uuid4())[:8], 'jogadores': [],
@@ -266,6 +290,14 @@ def criar_sala():
     carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
     emit('sala_criada_sucesso', {'codigo': codigo, 'temas': list(BANCO_PALAVRAS.keys())})
+
+@socketio.on('destruir_sala')
+def destruir_sala(dados):
+    if salas_ativas:
+        codigo = list(salas_ativas.keys())[0]
+        emit('sala_destruida', {}, to=codigo) # Avisa os celulares para voltarem ao login
+        salas_ativas.clear()
+# =========================================================
 
 @socketio.on('solicitar_coroacao')
 def solicitar_coroacao(dados):
@@ -408,20 +440,6 @@ def voltar_para_lobby(dados):
     if sala:
         sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
         sala['debate_iniciado'] = False
-        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
-        
-        emit('retorno_lobby_host', {}, to=sala['host_sid'])
-        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
-        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
-
-@socketio.on('forcar_lobby')
-def forcar_lobby(dados):
-    codigo = dados.get('codigo')
-    sala = salas_ativas.get(codigo)
-    if sala:
-        sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
-        sala['debate_iniciado'] = False 
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
         socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
         
