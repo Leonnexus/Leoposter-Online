@@ -126,7 +126,6 @@
         let meu_nome_atual = "";
         let codigo_atual = "";
         
-        // IDENTIFICADOR DE TESTE: Isola o armazenamento se estiver no Modo Desenvolvedor
         const urlParams = new URLSearchParams(window.location.search);
         const testId = urlParams.get('test_id') ? '_' + urlParams.get('test_id') : '';
         const KEY_NOME = 'leoposter_nome' + testId;
@@ -177,6 +176,13 @@
                 location.reload();
             }
         }
+
+        socket.on('sala_destruida', () => {
+            alert("A sala foi encerrada pelo Host.");
+            localStorage.removeItem(KEY_NOME);
+            localStorage.removeItem(KEY_CODIGO);
+            location.reload();
+        });
 
         socket.on('erro_conexao', (dados) => {
             alert(dados.mensagem);
