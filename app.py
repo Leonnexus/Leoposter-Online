@@ -240,6 +240,9 @@ def tela_jogador(): return render_template('jogador.html')
 @app.route('/host')
 def tela_admin(): return render_template('admin.html')
 
+@app.route('/testador')
+def tela_testador(): return render_template('testador.html')
+
 @socketio.on('host_reconectou')
 def host_reconectou(dados):
     codigo = dados.get('codigo')
