@@ -149,7 +149,7 @@ BANCO_PALAVRAS = {
         ("Aladdin", "Contou com uma ajuda inusitada para fingir ser quem não era"),
         ("Mulan", "Precisou esconder sua verdadeira identidade para proteger sua família"),
         ("Peter Pan", "Recusa-se a aceitar a passagem natural do tempo"),
-        ("Fera", "Aprendeu a tratar os outros bem apenas quando ficou sem opções")
+        ("Fera", "Aprendeu a tratar os outros bem apenas quando ficou sem opções"),
         ("Woody", "Lidou muito mal com a sensação de estar sendo substituído"),
         ("Buzz Lightyear", "Viveu uma grande ilusão antes de aceitar a própria realidade"),
         ("Nemo", "Seu sumiço causou uma movimentação enorme"),
@@ -159,7 +159,7 @@ BANCO_PALAVRAS = {
         ("Sulley", "Sua aparência afasta os outros, mas tem um lado muito dócil"),
         ("Sr. Incrível", "Sentia muita falta dos seus antigos dias de glória"),
         ("Wall-E", "Fazia um trabalho exaustivo e repetitivo até encontrar um novo propósito"),
-        ("Alegria", "Achava que apenas o seu jeito de fazer as coisas era o correto")
+        ("Alegria", "Achava que apenas o seu jeito de fazer as coisas era o correto"),
         ("Chaves", "Nunca parece ter o suficiente para satisfazer suas necessidades básicas"),
         ("Quico (do Chaves)", "Gosta de exibir o que tem apenas para provocar os outros"),
         ("Seu Madruga (do Chaves)", "Sempre encontra uma desculpa criativa para evitar suas obrigações"),
