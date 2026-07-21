@@ -136,6 +136,41 @@ BANCO_PALAVRAS = {
         ("Zebra", "África"), ("Canguru", "Bolsa"), ("Coala", "Eucalipto"), ("Panda", "Bambu"), ("Gorila", "Forte"),
         ("Coruja", "Visão"), ("Águia", "Garras"), ("Pinguim", "Gelo"), ("Avestruz", "Corre"), ("Camelo", "Deserto")
         ],
+    "Personagens pt.2": [
+        ("Mickey Mouse", "É o rosto principal de um império gigante"),
+        ("Pato Donald", "Sua paciência é famosa por acabar muito rápido"),
+        ("Pateta", "Costuma causar acidentes sem ter a intenção"),
+        ("Minnie Mouse", "É conhecida por seu estilo e por estar sempre bem acompanhada"),
+        ("Pluto", "Não costuma opinar, apenas acompanha as aventuras dos outros"),
+        ("Cinderela", "Sua vida mudou completamente por causa de um prazo apertado"),
+        ("Branca de Neve", "Confiou na pessoa errada por causa de uma oferta irrecusável"),
+        ("Ariel", "Estava insatisfeita com sua vida e fez um sacrifício enorme para mudar"),
+        ("Simba", "Fugiu do passado por muito tempo antes de encarar seu destino"),
+        ("Aladdin", "Contou com uma ajuda inusitada para fingir ser quem não era"),
+        ("Mulan", "Precisou esconder sua verdadeira identidade para proteger sua família"),
+        ("Peter Pan", "Recusa-se a aceitar a passagem natural do tempo"),
+        ("Fera", "Aprendeu a tratar os outros bem apenas quando ficou sem opções")
+        ("Woody", "Lidou muito mal com a sensação de estar sendo substituído"),
+        ("Buzz Lightyear", "Viveu uma grande ilusão antes de aceitar a própria realidade"),
+        ("Nemo", "Seu sumiço causou uma movimentação enorme"),
+        ("Dory", "Sua mente tem dificuldade em reter informações simples"),
+        ("Relâmpago McQueen", "Precisou ser forçado a desacelerar para entender o que importava"),
+        ("Mike Wazowski", "Seu parceiro costuma levar todo o crédito pelo trabalho duro"),
+        ("Sulley", "Sua aparência afasta os outros, mas tem um lado muito dócil"),
+        ("Sr. Incrível", "Sentia muita falta dos seus antigos dias de glória"),
+        ("Wall-E", "Fazia um trabalho exaustivo e repetitivo até encontrar um novo propósito"),
+        ("Alegria", "Achava que apenas o seu jeito de fazer as coisas era o correto")
+        ("Chaves", "Nunca parece ter o suficiente para satisfazer suas necessidades básicas"),
+        ("Quico (do Chaves)", "Gosta de exibir o que tem apenas para provocar os outros"),
+        ("Seu Madruga (do Chaves)", "Sempre encontra uma desculpa criativa para evitar suas obrigações"),
+        ("Chiquinha (do Chaves)", "Usa o drama e a emoção para manipular as pessoas ao redor"),
+        ("Dona Florinda (do Chaves)", "Acredita ser superior às pessoas com quem convive diariamente"),
+        ("Professor Girafales (do Chaves)", "Tenta impor respeito, mas sempre acaba perdendo a linha"),
+        ("Senhor Barriga (do Chaves)", "Seu trabalho exige cobranças constantes e uma paciência absurda"),
+        ("Dona Clotilde / Bruxa do 71 (do Chaves)", "Tem uma fama injusta por causa de julgamentos precipitados"),
+        ("Nhonho (do Chaves)", "Sua situação financeira é nitidamente melhor que a de seus colegas"),
+        ("Jaiminho, o Carteiro (do Chaves)", "Tem muita preguiça de exercer a sua função")
+    ],
     #"Teste": [
         #("palavra", "dica vaga")
         #]
