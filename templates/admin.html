@@ -13,37 +13,28 @@
         button:disabled { background-color: #555 !important; cursor: not-allowed; opacity: 0.5; }
         .codigo-gigante { font-size: 75px; letter-spacing: 12px; color: #f1c40f; font-weight: bold; margin: 15px 0; }
         .escondido { display: none !important; }
-        
         .grid-config { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: left; background: #262626; padding: 20px; border-radius: 10px; margin-top: 20px; }
         select, input[type="number"], input[type="range"], input[type="text"] { width: 100%; border-radius: 6px; box-sizing: border-box; }
         select, input[type="number"], input[type="text"] { padding: 12px; font-size: 16px; background: #121212; color: white; border: 1px solid #444; }
-        
         .grid-jogadores { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 0; list-style: none; }
         .jogador-card { background: #2c2c2c; padding: 12px 15px; border-radius: 8px; font-size: 18px; border: 1px solid #3a3a3a; display: flex; align-items: center; justify-content: space-between; }
         .btn-expulsar { background: #c0392b; color: white; border: none; border-radius: 6px; width: 35px; height: 35px; cursor: pointer; margin: 0; padding: 0; font-size: 18px; line-height: 1; flex-shrink: 0; }
-        
         .btn-coroacao { background-color: #f39c12; width: auto; margin: 5px; font-size: 14px; padding: 10px 20px; }
         .podio-item { font-size: 22px; margin: 10px 0; font-weight: bold; }
-        
         .timer-controle { display: flex; align-items: center; justify-content: space-between; background: #121212; border-radius: 6px; border: 1px solid #444; padding: 2px;}
         .timer-btn { width: 40px; margin: 0; padding: 8px; background: #34495e; }
-        
         #ampulheta-container { width: 100%; height: 40px; background: #333; border-radius: 20px; overflow: hidden; margin-top: 20px; position: relative; border: 2px solid #222; }
         #ampulheta-fill { height: 100%; background: linear-gradient(90deg, #f39c12, #e67e22); width: 0%; transition: width 1s linear; }
-
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         .emoji-opt-container { position: relative; display: inline-block; width: 48px; height: 48px; font-size: 32px; line-height: 48px; text-align: center; background: #222; border-radius: 8px; cursor: pointer; user-select: none; transition: 0.2s; }
         .emoji-opt-container:active { background: #555; }
         .emoji-opt-container.ocupado { opacity: 0.4; cursor: not-allowed; background: #111; }
         .emoji-opt-container.selecionado { background: #2980b9; border: 2px solid #3498db; box-sizing: border-box; line-height: 44px; }
         .nome-sobre-emoji { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4757; font-size: 11px; font-weight: 900; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 2px 2px rgba(0,0,0,0.8); pointer-events: none; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
-        
         .voto-btn { background-color: #2c3e50; margin: 6px 0; border: 1px solid #34495e; text-transform: uppercase; font-size: 18px; transition: background 0.1s; }
         .voto-btn.selecionado { background-color: #e74c3c !important; border-color: #c0392b !important; }
         .btn-ja-foi { background-color: #d35400; margin-top: 20px; font-size: 14px; }
-
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; margin: 0 15px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; }
@@ -52,13 +43,10 @@
         input:checked + .slider:before { transform: translateX(26px); }
         .slider.round { border-radius: 34px; }
         .slider.round:before { border-radius: 50%; }
-
         #slide-overlay { position: fixed; top: 0; right: -100vw; width: 100vw; height: 100vh; background: #1e1e1e; z-index: 9999; transition: right 0.3s ease-out; display: flex; box-shadow: -5px 0 15px rgba(0,0,0,0.8); }
         #slide-overlay.inativo { display: none !important; }
         #slide-handle { position: absolute; left: -40px; top: 50%; transform: translateY(-50%); width: 40px; height: 140px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: mixed; border-radius: 10px 0 0 10px; cursor: pointer; font-weight: bold; font-size: 16px; user-select: none; box-shadow: -4px 0 10px rgba(0,0,0,0.5); }
-        
         .drawer-box { background: #292929; padding: 25px; border-radius: 12px; width: 100%; max-width: 360px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); box-sizing: border-box; margin: 0 auto 20px auto; display: flex; flex-direction: column; align-items: center; }
-
         @media (max-width: 768px) {
             .container { margin: 20px auto; padding: 20px; width: 95%; }
             .grid-config { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
@@ -95,7 +83,7 @@
             <button onclick="deletarJogadorDB()" style="width: 35%; background-color: #8e44ad; padding: 12px; margin-top: 0; display: inline-block;">Apagar</button>
         </div>
         <button onclick="resetarBanco('tudo')" style="background-color: #c0392b; margin-top: 40px;">💥 RESET TOTAL</button>
-        <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu</button>
+        <button onclick="fecharPainelBanco()" style="background-color: #555; margin-top: 30px;">Voltar ao Menu Principal</button>
     </div>
 
     <div class="container escondido" id="painel-lobby">
@@ -225,6 +213,7 @@
         <div id="bloco-aguardando">
             <p style="font-size: 18px; color: #aaa;">Aguardando jogadores memorizarem os papéis...</p>
             <p style="font-size: 20px; font-weight: bold; color: #3498db;">Prontos: <span id="leitura-contagem">0</span> / <span id="leitura-total">0</span></p>
+            <button onclick="forcarAvanco()" style="background-color: #f39c12; width: auto; font-size: 14px; margin-top: 20px;">Forçar Avanço ⏭️</button>
         </div>
 
         <div id="bloco-timer" class="escondido">
@@ -242,6 +231,8 @@
         <h1>VOTAÇÃO EM ANDAMENTO</h1>
         <p style="font-size: 24px;">Votos Confirmados: <span id="votos-contagem">0</span> / <span id="votos-total">0</span></p>
         <p style="color: #aaa; font-style: italic;">Aguardando todos os jogadores submeterem seus vereditos...</p>
+        <button onclick="forcarAvanco()" style="background-color: #f39c12; width: auto; font-size: 14px; margin-top: 20px;">Forçar Avanço (Encerrar Votação) ⏭️</button>
+        <br>
         <button onclick="destruirSala()" style="background-color: #c0392b; width: auto; font-size: 14px; margin-top: 25px;">🛑 Encerrar Partida e Voltar ao Menu</button>
     </div>
 
@@ -261,9 +252,8 @@
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
         
-        <button onclick="iniciarPartida()" style="background-color: #2ecc71; margin-top: 20px;">Iniciar Próxima Rodada</button>
-        <button onclick="voltarAoLobby()" style="background-color: #8e44ad; margin-top: 10px;">Voltar ao Menu da Sala</button>
-        <button onclick="destruirSala()" style="background-color: #c0392b; margin-top: 10px;">🛑 Encerrar Sala e Voltar ao Menu</button>
+        <button onclick="voltarAoLobby()" style="background-color: #8e44ad; margin-top: 20px;">Voltar ao Menu da Sala (Trocar Tema)</button>
+        <button onclick="destruirSala()" style="background-color: #c0392b; margin-top: 10px;">🛑 Encerrar Sala e Voltar ao Início</button>
     </div>
 
     <div class="container escondido" id="painel-coroacao">
@@ -279,6 +269,9 @@
         let intervaloTimer = null;
         let modoJogoAtual = 'host';
         
+        let local_fase = 'lobby';
+        let local_iteracao = 0;
+
         let souJogador = false;
         let meuNomeHost = "";
         const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝", "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"];
@@ -298,6 +291,14 @@
             socket.emit('verificar_sala_existente', { nome_host: nomeSalvo }); 
         });
 
+        // MECANISMO DE HEARTBEAT DE ESTADO (A CADA 1.5s)
+        socket.on('sync_estado_host', (dados) => {
+            if (dados.fase !== local_fase || dados.iteracao !== local_iteracao) {
+                const nomeSalvo = localStorage.getItem('leoposter_host_nome');
+                socket.emit('pedir_sync_host', {codigo: codigo_atual, nome_host: nomeSalvo});
+            }
+        });
+
         socket.on('nenhuma_sala_ativa', () => {
             document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
             document.getElementById('painel-inicio').classList.remove('escondido');
@@ -306,6 +307,8 @@
         socket.on('sala_recuperada', (dados) => {
             codigo_atual = dados.codigo;
             modoJogoAtual = dados.modo_jogo;
+            local_fase = dados.fase_atual;
+            local_iteracao = dados.iteracao;
             
             const selectTema = document.getElementById('cfg-tema');
             if (selectTema.options.length <= 1) {
@@ -367,6 +370,8 @@
 
         socket.on('sala_criada_sucesso', (dados) => {
             codigo_atual = dados.codigo;
+            local_fase = 'lobby';
+            local_iteracao = 0;
             document.getElementById('painel-inicio').classList.add('escondido');
             document.getElementById('painel-lobby').classList.remove('escondido');
             document.getElementById('txt-codigo').innerText = codigo_atual;
@@ -502,17 +507,14 @@
 
         function iniciarPartida() {
             host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
-            
-            // Força esconder as telas passadas antes de dar play
-            document.getElementById('painel-resultado').classList.add('escondido');
-            document.getElementById('painel-suspense').classList.add('escondido');
-            document.getElementById('painel-votacao').classList.add('escondido');
-            
             document.getElementById('host-painel-espera').classList.add('escondido');
             document.getElementById('host-config-modo').classList.add('escondido');
             document.getElementById('btn-iniciar-drawer').classList.add('escondido');
-            
             socket.emit('iniciar_partida', { codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value, imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value, trapaca: document.getElementById('cfg-trapaca').value, tempo: cfgTempoGlobal });
+        }
+        
+        function forcarAvanco() {
+            socket.emit('forcar_avanco', { codigo: codigo_atual });
         }
 
         socket.on('distribuir_papeis', (dados) => {
@@ -543,7 +545,7 @@
                     btn.innerText = dados.ja_votou_ja_foi ? "Aguardando..." : "Palavra Repetida (Já foi!)";
                 });
                 
-                openSlide(); // Auto-abre a gaveta!
+                openSlide(); 
             }
         });
 
@@ -552,7 +554,7 @@
             document.getElementById('host-painel-secreto').classList.add('escondido');
             document.getElementById('host-painel-cadeado').classList.remove('escondido');
             socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meuNomeHost });
-            closeSlide(); // Auto-fecha a gaveta!
+            closeSlide(); 
         }
         
         function clicouJaFoiHost() {
@@ -583,7 +585,7 @@
                     }
                 });
                 
-                openSlide(); // Auto-abre a gaveta pro Host votar!
+                openSlide(); 
             }
         });
 
@@ -597,7 +599,7 @@
             if (hostVotosSelecionados.length === hostMaxVotos) {
                 socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
                 document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); 
-                closeSlide(); // Auto-fecha a gaveta ao confirmar o voto!
+                closeSlide(); 
             }
         }
 
@@ -630,7 +632,7 @@
             document.getElementById('painel-jogo').classList.add('escondido'); document.getElementById('painel-votacao').classList.remove('escondido');
             document.getElementById('votos-contagem').innerText = "0"; if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
             
-            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
+            if(souJogador && modoJogoAtual === 'host_jogador') openSlide();
         });
 
         socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
@@ -669,7 +671,13 @@
         }
 
         function voltarAoLobby() { 
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
+            document.getElementById('painel-lobby').classList.remove('escondido');
             document.getElementById('host-config-modo').classList.remove('escondido');
+            if (modoJogoAtual === 'host_jogador' && souJogador) {
+                document.getElementById('host-painel-espera').classList.remove('escondido');
+                document.getElementById('btn-iniciar-drawer').classList.remove('escondido');
+            }
             socket.emit('voltar_para_lobby', { codigo: codigo_atual }); 
         }
 
