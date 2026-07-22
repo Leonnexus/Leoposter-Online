@@ -142,6 +142,38 @@ salas_ativas = {}
 def gerar_codigo_sala():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
 
+# HEARTBEAT DE SINCRONISMO
+def heartbeat_sala(codigo):
+    while codigo in salas_ativas:
+        socketio.sleep(1.5)
+        sala = salas_ativas.get(codigo)
+        if not sala: break
+        
+        estado_reduzido = {
+            'fase': sala['fase_atual'],
+            'iteracao': sala['iteracao_fase']
+        }
+        socketio.emit('sync_estado', estado_reduzido, to=codigo)
+        if sala.get('host_sid'):
+            socketio.emit('sync_estado_host', estado_reduzido, to=sala['host_sid'])
+
+@socketio.on('pedir_sync_jogador')
+def pedir_sync_jogador(dados):
+    codigo = dados.get('codigo')
+    nome = dados.get('nome')
+    sala = salas_ativas.get(codigo)
+    if not sala: return
+    jogador = next((j for j in sala['jogadores'] if j['nome'] == nome), None)
+    if jogador:
+        enviar_estado_jogador(sala, jogador)
+
+@socketio.on('pedir_sync_host')
+def pedir_sync_host(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if not sala: return
+    verificar_sala_existente({'nome_host': dados.get('nome_host')})
+
 def enviar_estado_jogador(sala, jogador):
     fase = sala.get('fase_atual')
     sid = jogador['sid']
@@ -178,16 +210,6 @@ def enviar_estado_jogador(sala, jogador):
             
     elif fase == 'lobby': socketio.emit('retorno_lobby_celular', {}, to=sid)
 
-def monitorar_confirmacoes(codigo, fase_esperada, iteracao_id):
-    socketio.sleep(2)
-    for _ in range(15):
-        sala = salas_ativas.get(codigo)
-        if not sala or sala.get('fase_atual') != fase_esperada or sala.get('iteracao_fase') != iteracao_id: break
-        pendentes = [j for j in sala['jogadores'] if j['nome'] not in sala.get('confirmacoes_status', set())]
-        if not pendentes: break
-        for jogador in pendentes: enviar_estado_jogador(sala, jogador)
-        socketio.sleep(3)
-
 def checar_todos_leram(codigo):
     sala = salas_ativas.get(codigo)
     if not sala or sala.get('debate_iniciado', False): return
@@ -206,7 +228,7 @@ def checar_avanco_ja_foi(codigo):
     sala = salas_ativas.get(codigo)
     if not sala: return
     if len(sala['jogadores']) > 0 and len(sala['jogadores_ja_foi']) >= len(sala['jogadores']):
-        sala['jogadores_ja_foi'] = set(); sala['jogadores_prontos'] = set(); sala['confirmacoes_status'] = set()
+        sala['jogadores_ja_foi'] = set(); sala['jogadores_prontos'] = set()
         sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
         sala['debate_iniciado'] = False
 
@@ -220,17 +242,8 @@ def checar_avanco_ja_foi(codigo):
         sala['palavras_usadas'].add(nova_palavra); sala['palavra_atual'] = nova_palavra; sala['dica_vaga'] = nova_dica
 
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-        socketio.start_background_task(monitorar_confirmacoes, codigo, 'revelacao', sala['iteracao_fase'])
         emit('progresso_leitura_host', {'prontos': 0, 'total': len(sala['jogadores'])}, to=sala['host_sid'])
         emit('travar_timer_host', {}, to=sala['host_sid'])
-
-@socketio.on('confirmar_status')
-def confirmar_status(dados):
-    codigo = dados.get('codigo'); nome = dados.get('nome'); status = dados.get('status')
-    sala = salas_ativas.get(codigo)
-    if sala and sala.get('fase_atual') == status:
-        if 'confirmacoes_status' not in sala: sala['confirmacoes_status'] = set()
-        sala['confirmacoes_status'].add(nome)
 
 @app.route('/')
 def tela_jogador(): return render_template('jogador.html')
@@ -257,7 +270,7 @@ def verificar_sala_existente(dados):
                     break
         
         estado = {
-            'codigo': codigo, 'fase_atual': sala['fase_atual'],
+            'codigo': codigo, 'fase_atual': sala['fase_atual'], 'iteracao': sala['iteracao_fase'],
             'jogadores': [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']],
             'temas': list(BANCO_PALAVRAS.keys()), 'modo_jogo': sala.get('modo_jogo', 'host'),
             'primeiro_falar': sala.get('primeiro_falar', ''), 'votos_computados': len(sala.get('votos', {})),
@@ -275,12 +288,13 @@ def criar_sala():
         'historico_impostores': {}, 'palavras_usadas': set(), 'acumulado_caos': 10,
         'acumulado_trapaca': 20, 'impostores_ultima_rodada': [], 'placar': {},
         'fila_interrogatorio': [], 'fase_atual': 'lobby', 'iteracao_fase': 0,
-        'confirmacoes_status': set(), 'jogadores_prontos': set(), 'jogadores_ja_foi': set(),
+        'jogadores_prontos': set(), 'jogadores_ja_foi': set(),
         'impostores_atuais': [], 'palavra_atual': '', 'tempo_discussao': 120, 'votos': {},
         'modo_jogo': 'host', 'debate_iniciado': False, 'ultimo_resultado': {}
     }
     carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
+    socketio.start_background_task(heartbeat_sala, codigo)
     emit('sala_criada_sucesso', {'codigo': codigo, 'temas': list(BANCO_PALAVRAS.keys())})
 
 @socketio.on('destruir_sala')
@@ -289,6 +303,18 @@ def destruir_sala(dados):
         codigo = list(salas_ativas.keys())[0]
         emit('sala_destruida', {}, to=codigo) 
         salas_ativas.clear()
+
+@socketio.on('forcar_avanco')
+def forcar_avanco(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if not sala: return
+    
+    if sala['fase_atual'] == 'revelacao':
+        sala['jogadores_prontos'] = set([j['nome'] for j in sala['jogadores']])
+        checar_todos_leram(codigo)
+    elif sala['fase_atual'] == 'votacao':
+        encerrar_votacao_interna(codigo)
 
 @socketio.on('solicitar_coroacao')
 def solicitar_coroacao(dados):
@@ -429,24 +455,11 @@ def voltar_para_lobby(dados):
     codigo = dados.get('codigo')
     sala = salas_ativas.get(codigo)
     if sala:
-        sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
+        sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
+        sala['votos'] = {}
+        sala['jogadores_prontos'] = set()
+        sala['jogadores_ja_foi'] = set()
         sala['debate_iniciado'] = False
-        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
-        
-        emit('retorno_lobby_host', {}, to=sala['host_sid'])
-        lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
-        emit('lista_jogadores_atualizada', {'jogadores': lista_atualizada}, to=codigo)
-
-@socketio.on('forcar_lobby')
-def forcar_lobby(dados):
-    codigo = dados.get('codigo')
-    sala = salas_ativas.get(codigo)
-    if sala:
-        sala['fase_atual'] = 'lobby'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
-        sala['debate_iniciado'] = False 
-        for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-        socketio.start_background_task(monitorar_confirmacoes, codigo, 'lobby', sala['iteracao_fase'])
         
         emit('retorno_lobby_host', {}, to=sala['host_sid'])
         lista_atualizada = [{'nome': j['nome'], 'emoji': j['emoji']} for j in sala['jogadores']]
@@ -461,7 +474,7 @@ def iniciar_partida(dados):
     sala['modo_jogo'] = dados.get('modo_jogo', 'host')
     sala['fase_atual'] = 'revelacao'
     sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
-    sala['confirmacoes_status'] = set(); sala['jogadores_prontos'] = set(); sala['jogadores_ja_foi'] = set(); sala['votos'] = {}
+    sala['jogadores_prontos'] = set(); sala['jogadores_ja_foi'] = set(); sala['votos'] = {}
     sala['tempo_discussao'] = int(dados.get('tempo', 120))
     sala['debate_iniciado'] = False 
 
@@ -514,7 +527,6 @@ def iniciar_partida(dados):
     sala['primeiro_falar'] = f"{primeiro['emoji']} {primeiro['nome']}"
 
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-    socketio.start_background_task(monitorar_confirmacoes, codigo, 'revelacao', sala['iteracao_fase'])
     emit('partida_iniciada_host', {'primeiro': sala['primeiro_falar'], 'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
 
 @socketio.on('clicou_ja_foi')
@@ -542,10 +554,9 @@ def iniciar_votacao(dados):
     if not sala: return
     
     sala['fase_atual'] = 'votacao'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
-    sala['confirmacoes_status'] = set(); sala['votos'] = {}
+    sala['votos'] = {}
     
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-    socketio.start_background_task(monitorar_confirmacoes, codigo, 'votacao', sala['iteracao_fase'])
     emit('votacao_iniciada_host', {'total_jogadores': len(sala['jogadores'])}, to=sala['host_sid'])
 
 @socketio.on('enviar_voto')
@@ -562,7 +573,7 @@ def encerrar_votacao_interna(codigo):
     sala = salas_ativas.get(codigo)
     if not sala or sala['fase_atual'] == 'resultado': return
 
-    sala['fase_atual'] = 'resultado'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1; sala['confirmacoes_status'] = set()
+    sala['fase_atual'] = 'resultado'; sala['iteracao_fase'] = sala.get('iteracao_fase', 0) + 1
     
     votos = sala.get('votos', {})
     total_inocentes_mesa = sum(1 for j in sala['jogadores'] if j['nome'] not in sala['impostores_atuais'])
@@ -620,11 +631,7 @@ def encerrar_votacao_interna(codigo):
     sala['ultimo_resultado'] = payload_resultado
 
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
-    socketio.start_background_task(monitorar_confirmacoes, codigo, 'resultado', sala['iteracao_fase'])
-    
     emit('resultado_votacao_host', payload_resultado, to=sala['host_sid'])
-    if sala.get('modo_jogo') == 'host_jogador':
-        emit('resultado_votacao_global', payload_resultado, to=codigo)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=8080)
