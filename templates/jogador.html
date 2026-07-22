@@ -159,7 +159,7 @@
             }
         };
 
-        // MECANISMO DE HEARTBEAT DE ESTADO (A CADA 1.5s)
+        // MECANISMO DE HEARTBEAT DE ESTADO BLINDADO
         socket.on('sync_estado', (dados) => {
             if (dados.fase !== local_fase || dados.iteracao !== local_iteracao) {
                 socket.emit('pedir_sync_jogador', {codigo: codigo_atual, nome: meu_nome_atual});
@@ -248,10 +248,12 @@
             });
         }
 
-        socket.on('retorno_lobby_celular', () => {
+        socket.on('retorno_lobby_celular', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'lobby' });
             clearInterval(celIntervaloTimer);
-            local_fase = 'lobby';
+            local_fase = dados.fase || 'lobby';
+            local_iteracao = dados.iteracao || 0;
+            
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-espera').classList.remove('escondido');
             jogador_papel_oculto = false;
@@ -261,7 +263,8 @@
 
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
-            local_fase = 'revelacao';
+            local_fase = dados.fase;
+            local_iteracao = dados.iteracao;
             
             if (!dados.ja_confirmou) { jogador_papel_oculto = false; }
             if (jogador_papel_oculto) return;
@@ -320,7 +323,8 @@
         }
 
         socket.on('todos_leram_papeis_global', (dados) => {
-            local_fase = 'revelacao';
+            local_fase = dados.fase || 'revelacao';
+            local_iteracao = dados.iteracao;
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-debate').classList.remove('escondido');
             
@@ -345,7 +349,8 @@
 
         socket.on('ir_para_tela_votacao', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'votacao' });
-            local_fase = 'votacao';
+            local_fase = dados.fase;
+            local_iteracao = dados.iteracao;
             
             if (jogadorFaseVotacaoRenderizada) return;
             jogadorFaseVotacaoRenderizada = true;
@@ -407,9 +412,10 @@
             }
         }
 
-        socket.on('votacao_encerrada_celular', () => {
+        socket.on('votacao_encerrada_celular', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'resultado' });
-            local_fase = 'resultado';
+            local_fase = dados.fase;
+            local_iteracao = dados.iteracao;
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-espera').classList.remove('escondido');
             document.getElementById('tela-espera').innerHTML = "<h3>Rodada Encerrada</h3><p style='color:#aaa;'>Aguarde os resultados.</p>";
@@ -417,7 +423,8 @@
 
         socket.on('resultado_votacao_global', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'resultado' });
-            local_fase = 'resultado';
+            local_fase = dados.fase;
+            local_iteracao = dados.iteracao;
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             document.getElementById('tela-suspense').classList.remove('escondido');
             
