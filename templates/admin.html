@@ -104,6 +104,7 @@
                 <label>Impostores Base:</label>
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
+            
             <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;">
                 <label style="margin-bottom: 10px; color: white;">Como o painel irá se comportar?</label>
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
@@ -115,6 +116,7 @@
                     <span style="font-weight: bold; color: #555;" id="lbl-modo-jogador">Painel + Jogador</span>
                 </div>
             </div>
+
             <div>
                 <label>Tempo Interrogatório:</label>
                 <div class="timer-controle">
@@ -136,6 +138,7 @@
         <button disabled id="btn-iniciar" style="background-color: #555; margin-top: 30px;" onclick="iniciarPartida()">Aguardando Jogadores...</button>
     </div>
 
+    <!-- PAINEL GAVETA (MEU CARTÃO DO HOST) -->
     <div id="slide-overlay" class="inativo">
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
         <div id="slide-content" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
@@ -343,6 +346,8 @@
             } else if (dados.fase_atual === 'revelacao') {
                 document.getElementById('painel-jogo').classList.remove('escondido');
                 document.getElementById('primeiro-falar').innerText = dados.primeiro_falar || "---";
+                document.getElementById('leitura-contagem').innerText = dados.prontos_computados || 0;
+                document.getElementById('leitura-total').innerText = dados.total_jogadores || 0;
             } else if (dados.fase_atual === 'votacao') {
                 document.getElementById('painel-votacao').classList.remove('escondido');
                 document.getElementById('votos-contagem').innerText = dados.votos_computados;
@@ -526,6 +531,12 @@
             socket.emit('forcar_avanco', { codigo: codigo_atual });
         }
 
+        // AGORA O SERVIDOR GRITA PARA A SALA INTEIRA QUANDO UM JOGADOR LÊ
+        socket.on('progresso_leitura_host', (dados) => { 
+            document.getElementById('leitura-contagem').innerText = dados.prontos; 
+            document.getElementById('leitura-total').innerText = dados.total; 
+        });
+
         socket.on('distribuir_papeis', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
@@ -627,8 +638,6 @@
             document.getElementById('primeiro-falar').innerText = dados.primeiro; document.getElementById('leitura-contagem').innerText = "0"; document.getElementById('leitura-total').innerText = dados.total_jogadores;
         });
 
-        socket.on('progresso_leitura_host', (dados) => { document.getElementById('leitura-contagem').innerText = dados.prontos; document.getElementById('leitura-total').innerText = dados.total; });
-
         socket.on('travar_timer_host', () => { clearInterval(intervaloTimer); document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido'); });
 
         socket.on('todos_leram_papeis', (dados) => {
@@ -681,6 +690,7 @@
             document.getElementById('titulo-revelacao').innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
             const blocoImps = document.getElementById('bloco-impostores-revelados');
             
+            // GARANTINDO O DISPLAY DE TODOS OS IMPOSTORES LADO A LADO
             let containerHtml = '<div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">';
             dados.destaques.forEach(d => {
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
@@ -695,23 +705,6 @@
             const ul = document.getElementById('lista-placar-atual'); ul.innerHTML = '';
             for (const [nome, pts] of Object.entries(dados.pontos)) { ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`; }
         }
-
-        socket.on('retorno_lobby_host', (dados) => {
-            local_fase = dados.fase;
-            local_iteracao = dados.iteracao;
-            clearInterval(intervaloTimer);
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
-            closeSlide();
-            document.getElementById('painel-lobby').classList.remove('escondido');
-            host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
-            
-            if (souJogador && modoJogoAtual === 'host_jogador') {
-                document.getElementById('host-painel-secreto').classList.add('escondido');
-                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
-                document.getElementById('host-painel-cadeado').classList.add('escondido');
-                document.getElementById('host-painel-espera').classList.remove('escondido');
-            }
-        });
 
         function voltarAoLobby() { 
             document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
