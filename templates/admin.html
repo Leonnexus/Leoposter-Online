@@ -201,6 +201,7 @@
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
                 <h2>Área Restrita</h2>
                 <p style="color: #aaa; font-size: 14px;">Arraste a tela para a direita ou feche a aba para voltar ao painel principal.</p>
+                <button class="btn-ja-foi" onclick="clicouJaFoiHost()" style="background-color: #d35400; margin-top: 15px; font-size: 14px;">Palavra Repetida (Já foi!)</button>
             </div>
         </div>
     </div>
@@ -563,6 +564,7 @@
                 }
                 
                 document.querySelectorAll('.btn-ja-foi').forEach(btn => {
+                    btn.classList.remove('escondido');
                     btn.disabled = dados.ja_votou_ja_foi;
                     btn.style.opacity = dados.ja_votou_ja_foi ? '0.5' : '1';
                     btn.innerText = dados.ja_votou_ja_foi ? "Aguardando..." : "Palavra Repetida (Já foi!)";
@@ -590,6 +592,7 @@
         socket.on('ir_para_tela_votacao', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
+            document.querySelectorAll('.btn-ja-foi').forEach(btn => btn.classList.add('escondido'));
             
             if (modoJogoAtual === 'host_jogador' && souJogador) {
                 socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'votacao' });
@@ -665,6 +668,7 @@
             if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
         });
 
+        // O HOST OUVE O VOTO E ATUALIZA A TV SEM NENHUM PROBLEMA
         socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
 
         socket.on('resultado_votacao_host', (dados) => {
@@ -690,7 +694,6 @@
             document.getElementById('titulo-revelacao').innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
             const blocoImps = document.getElementById('bloco-impostores-revelados');
             
-            // GARANTINDO O DISPLAY DE TODOS OS IMPOSTORES LADO A LADO
             let containerHtml = '<div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">';
             dados.destaques.forEach(d => {
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
