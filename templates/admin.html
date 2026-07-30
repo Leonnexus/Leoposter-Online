@@ -538,6 +538,16 @@
             document.getElementById('leitura-total').innerText = dados.total; 
         });
 
+        socket.on('atualizar_contagem_ja_foi', (dados) => {
+            document.querySelectorAll('.btn-ja-foi').forEach(btn => {
+                if (btn.disabled) {
+                    btn.innerText = `Aguardando... (${dados.clicados}/${dados.total})`;
+                } else {
+                    btn.innerText = `Palavra Repetida (${dados.clicados}/${dados.total})`;
+                }
+            });
+        });
+
         socket.on('distribuir_papeis', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
@@ -585,7 +595,7 @@
         function clicouJaFoiHost() {
             socket.emit('clicou_ja_foi', { codigo: codigo_atual, nome: meuNomeHost });
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
-                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Aguardando os outros...";
+                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Registrando...";
             });
         }
 
