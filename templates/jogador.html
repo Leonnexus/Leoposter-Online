@@ -261,6 +261,16 @@
             renderizarGradeEmojis();
         });
 
+        socket.on('atualizar_contagem_ja_foi', (dados) => {
+            document.querySelectorAll('.btn-ja-foi').forEach(btn => {
+                if (btn.disabled) {
+                    btn.innerText = `Aguardando... (${dados.clicados}/${dados.total})`;
+                } else {
+                    btn.innerText = `Palavra Repetida (${dados.clicados}/${dados.total})`;
+                }
+            });
+        });
+
         socket.on('distribuir_papeis', (dados) => {
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'revelacao' });
             local_fase = dados.fase;
@@ -319,7 +329,7 @@
         function clicouJaFoi() {
             socket.emit('clicou_ja_foi', { codigo: codigo_atual, nome: meu_nome_atual });
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
-                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Aguardando os outros...";
+                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Registrando...";
             });
         }
 
