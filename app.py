@@ -154,8 +154,6 @@ def heartbeat_sala(codigo):
             'iteracao': sala['iteracao_fase']
         }
         socketio.emit('sync_estado', estado_reduzido, to=codigo)
-        
-        # Sincronismo do Host agora vai direto pro canal da sala, impedindo falhas de SID
         socketio.emit('sync_estado_host', estado_reduzido, to=codigo)
 
 @socketio.on('pedir_sync_jogador')
@@ -166,6 +164,8 @@ def pedir_sync_jogador(dados):
     if not sala: return
     jogador = next((j for j in sala['jogadores'] if j['nome'] == nome), None)
     if jogador:
+        # ATUALIZA O SID DO JOGADOR PARA GARANTIR QUE A MENSAGEM CHEGUE (FIM DA SURDEZ)
+        jogador['sid'] = request.sid 
         enviar_estado_jogador(sala, jogador)
 
 @socketio.on('pedir_sync_host')
@@ -222,7 +222,6 @@ def checar_todos_leram(codigo):
     total_prontos = len(sala['jogadores_prontos'])
     total_jogadores = len(sala['jogadores'])
     
-    # EMITINDO DIRETO PARA O CODIGO DA SALA EM VEZ DO HOST_SID PARA EVITAR PERDAS
     emit('progresso_leitura_host', {'prontos': total_prontos, 'total': total_jogadores}, to=codigo)
     
     if total_jogadores > 0 and total_prontos >= total_jogadores:
@@ -546,6 +545,19 @@ def iniciar_partida(dados):
 
     for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
     emit('partida_iniciada_host', {'fase': 'revelacao', 'primeiro': sala['primeiro_falar'], 'total_jogadores': len(sala['jogadores']), 'iteracao': sala['iteracao_fase']}, to=codigo)
+
+@socketio.on('clicou_ja_foi')
+def clicou_ja_foi(dados):
+    codigo = dados.get('codigo')
+    sala = salas_ativas.get(codigo)
+    if not sala or sala['fase_atual'] != 'revelacao': return
+
+    nome = dados.get('nome')
+    if nome:
+        sala['jogadores_ja_foi'].add(nome)
+        # BOTAO MOSTRARÁ A CONTAGEM AO VIVO
+        emit('atualizar_contagem_ja_foi', {'clicados': len(sala['jogadores_ja_foi']), 'total': len(sala['jogadores'])}, to=codigo)
+        checar_avanco_ja_foi(codigo)
 
 @socketio.on('confirmar_leitura_papel')
 def confirmar_leitura_papel(dados):
