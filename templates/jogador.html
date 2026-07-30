@@ -272,6 +272,7 @@
             document.querySelectorAll('.box, #tela-jogo').forEach(b => b.classList.add('escondido'));
             
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
+                btn.classList.remove('escondido');
                 btn.disabled = dados.ja_votou_ja_foi;
                 btn.style.opacity = dados.ja_votou_ja_foi ? '0.5' : '1';
                 btn.innerText = dados.ja_votou_ja_foi ? "Aguardando..." : "Palavra Repetida (Já foi!)";
@@ -353,6 +354,8 @@
             socket.emit('confirmar_status', { codigo: codigo_atual, nome: meu_nome_atual, status: 'votacao' });
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
+            
+            document.querySelectorAll('.btn-ja-foi').forEach(btn => btn.classList.add('escondido'));
             
             if (jogadorFaseVotacaoRenderizada) return;
             jogadorFaseVotacaoRenderizada = true;
