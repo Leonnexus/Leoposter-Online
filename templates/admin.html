@@ -290,10 +290,10 @@
 
         socket.on('connect', () => { 
             const nomeSalvo = localStorage.getItem('leoposter_host_nome');
-            const codigoSalvo = localStorage.getItem('leoposter_host_codigo');
-            socket.emit('verificar_sala_existente', { nome_host: nomeSalvo, codigo: codigoSalvo }); 
+            socket.emit('verificar_sala_existente', { nome_host: nomeSalvo }); 
         });
 
+        // MECANISMO DE HEARTBEAT DE ESTADO (TRAVA O PISCA-PISCA)
         socket.on('sync_estado_host', (dados) => {
             if (dados.fase !== local_fase || dados.iteracao !== local_iteracao) {
                 const nomeSalvo = localStorage.getItem('leoposter_host_nome');
@@ -369,10 +369,8 @@
 
         function destruirSala() {
             if(confirm("Deseja encerrar a sala e desconectar todos os celulares permanentemente?")) {
-                let pwd = prompt("Insira a senha do Host para encerrar a sala:");
-                socket.emit('destruir_sala', { codigo: codigo_atual, senha: pwd });
+                socket.emit('destruir_sala', {});
                 localStorage.removeItem('leoposter_host_nome');
-                localStorage.removeItem('leoposter_host_codigo');
                 souJogador = false; meuNomeHost = "";
                 setTimeout(() => { location.reload(); }, 500);
             }
@@ -382,7 +380,6 @@
             local_fase = 'lobby';
             local_iteracao = 0;
             codigo_atual = dados.codigo;
-            localStorage.setItem('leoposter_host_codigo', codigo_atual);
             document.getElementById('painel-inicio').classList.add('escondido');
             document.getElementById('painel-lobby').classList.remove('escondido');
             document.getElementById('txt-codigo').innerText = codigo_atual;
@@ -412,9 +409,6 @@
 
         function alternarModoJogoSemEmitir() {
             const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
-            
-            document.getElementById('cfg-modo-jogo-toggle-drawer').checked = toggle;
-            
             document.getElementById('lbl-modo-host').style.color = toggle ? '#555' : '#3498db';
             document.getElementById('lbl-modo-jogador').style.color = toggle ? '#3498db' : '#555';
             document.getElementById('lbl-modo-host-drawer').style.color = toggle ? '#555' : '#3498db';
@@ -522,6 +516,7 @@
         function iniciarPartida() {
             host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
             
+            // Força esconder as telas passadas antes de dar play
             document.getElementById('painel-resultado').classList.add('escondido');
             document.getElementById('painel-suspense').classList.add('escondido');
             document.getElementById('painel-votacao').classList.add('escondido');
@@ -537,6 +532,7 @@
             socket.emit('forcar_avanco', { codigo: codigo_atual });
         }
 
+        // AGORA O SERVIDOR GRITA PARA A SALA INTEIRA QUANDO UM JOGADOR LÊ
         socket.on('progresso_leitura_host', (dados) => { 
             document.getElementById('leitura-contagem').innerText = dados.prontos; 
             document.getElementById('leitura-total').innerText = dados.total; 
@@ -584,7 +580,7 @@
                     btn.innerText = dados.ja_votou_ja_foi ? "Aguardando..." : "Palavra Repetida (Já foi!)";
                 });
                 
-                openSlide(); 
+                openSlide(); // Auto-abre a gaveta!
             }
         });
 
@@ -593,7 +589,7 @@
             document.getElementById('host-painel-secreto').classList.add('escondido');
             document.getElementById('host-painel-cadeado').classList.remove('escondido');
             socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meuNomeHost });
-            closeSlide(); 
+            closeSlide(); // Auto-fecha a gaveta!
         }
         
         function clicouJaFoiHost() {
@@ -628,7 +624,7 @@
                     }
                 });
                 
-                openSlide(); 
+                openSlide(); // Auto-abre a gaveta pro Host votar!
             }
         });
 
@@ -642,7 +638,7 @@
             if (hostVotosSelecionados.length === hostMaxVotos) {
                 socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
                 document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); 
-                closeSlide(); 
+                closeSlide(); // Auto-fecha a gaveta ao confirmar o voto!
             }
         }
 
@@ -679,9 +675,10 @@
             document.getElementById('painel-jogo').classList.add('escondido'); document.getElementById('painel-votacao').classList.remove('escondido');
             document.getElementById('votos-contagem').innerText = "0"; if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
             
-            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); 
+            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
         });
 
+        // O HOST OUVE O VOTO E ATUALIZA A TV SEM NENHUM PROBLEMA
         socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
 
         socket.on('resultado_votacao_host', (dados) => {
@@ -751,18 +748,11 @@
         function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
         function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
         function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
-        
-        function resetarBanco(tipo) { 
-            if(confirm("Tem certeza da exclusão?")) {
-                let pwd = prompt("Atenção: Insira a senha do Host para resetar os dados.");
-                socket.emit('resetar_banco', {tipo: tipo, senha: pwd}); 
-            }
-        }
+        function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
         function deletarJogadorDB() {
             let nome = document.getElementById('ipt-del-jogador').value.trim();
             if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) {
-                let pwd = prompt("Atenção: Insira a senha do Host para deletar este jogador.");
-                socket.emit('deletar_jogador_banco', { nome: nome, senha: pwd });
+                socket.emit('deletar_jogador_banco', { nome: nome });
                 document.getElementById('ipt-del-jogador').value = "";
             }
         }
