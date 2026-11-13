@@ -83,16 +83,10 @@ def salvar_banco_dados(pontos_da_rodada, placar, id_partida, detalhes_rodada, hi
         "Placar Geral da Partida": int(placar[j]), "Dia": str(dia_hoje)
     } for j, pts in pontos_da_rodada.items()]
     
-    df = pd.concat([df, pd.DataFrame(novas_linhas)], ignore_index=True)
-    df["Dia"] = df["Dia"].astype(str)
+    df_final_rodadas = pd.concat([df, pd.DataFrame(novas_linhas)], ignore_index=True)
+    df_final_rodadas["Dia"] = df_final_rodadas["Dia"].astype(str)
     
-    df_hoje = df[df["Dia"] == str(dia_hoje)]
-    soma = df_hoje.groupby("Nome")["Pontos na Rodada"].sum().reset_index()
-    soma["Nome"] = soma["Nome"].apply(lambda x: f"TOTAL {x}")
-    soma["Dia"] = "SOMATÓRIA"
-    df_final_rodadas = pd.concat([df, soma], ignore_index=True)
-    
-    df_raw = df[df["Dia"] != "SOMATÓRIA"].copy()
+    df_raw = df_final_rodadas.copy()
     resumo_list, analytics_list = [], []
     for nome, group in df_raw.groupby("Nome"):
         partidas = group["ID_Partida"].nunique(); rodadas = len(group); pts_totais = group["Pontos na Rodada"].sum()
@@ -134,7 +128,7 @@ def salvar_banco_dados(pontos_da_rodada, placar, id_partida, detalhes_rodada, hi
         df_estado_eventos.to_sql("Estado_Eventos", conn, if_exists="replace", index=False)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'leoposter_chave_super_secreta'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'leoposter_chave_super_secreta')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 salas_ativas = {}
@@ -142,7 +136,6 @@ salas_ativas = {}
 def gerar_codigo_sala():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
 
-# HEARTBEAT OTIMIZADO
 def heartbeat_sala(codigo):
     while codigo in salas_ativas:
         socketio.sleep(1.5)
@@ -164,7 +157,6 @@ def pedir_sync_jogador(dados):
     if not sala: return
     jogador = next((j for j in sala['jogadores'] if j['nome'] == nome), None)
     if jogador:
-        # ATUALIZA O SID DO JOGADOR PARA GARANTIR QUE A MENSAGEM CHEGUE (FIM DA SURDEZ)
         jogador['sid'] = request.sid 
         enviar_estado_jogador(sala, jogador)
 
@@ -173,7 +165,7 @@ def pedir_sync_host(dados):
     codigo = dados.get('codigo')
     sala = salas_ativas.get(codigo)
     if not sala: return
-    verificar_sala_existente({'nome_host': dados.get('nome_host')})
+    verificar_sala_existente({'nome_host': dados.get('nome_host'), 'codigo': codigo})
 
 def enviar_estado_jogador(sala, jogador):
     fase = sala.get('fase_atual')
@@ -239,13 +231,15 @@ def checar_avanco_ja_foi(codigo):
         sala['debate_iniciado'] = False
 
         categoria = sala['tema_atual']
-        opcoes = [p for p in BANCO_PALAVRAS[categoria] if p[0] not in sala['palavras_usadas']]
+        opcoes = [p for p in BANCO_PALAVRAS[categoria] if f"{categoria}:{p[0]}" not in sala['palavras_usadas']]
         if not opcoes:
             opcoes = BANCO_PALAVRAS[categoria]
-            sala['palavras_usadas'].difference_update({p[0] for p in BANCO_PALAVRAS[categoria]})
+            sala['palavras_usadas'] = {u for u in sala['palavras_usadas'] if not str(u).startswith(f"{categoria}:")}
 
         nova_palavra, nova_dica = random.choice(opcoes)
-        sala['palavras_usadas'].add(nova_palavra); sala['palavra_atual'] = nova_palavra; sala['dica_vaga'] = nova_dica
+        sala['palavras_usadas'].add(f"{categoria}:{nova_palavra}") 
+        sala['palavra_atual'] = nova_palavra
+        sala['dica_vaga'] = nova_dica
 
         for jogador in sala['jogadores']: enviar_estado_jogador(sala, jogador)
         
@@ -271,13 +265,14 @@ def tela_testador(): return render_template('testador.html')
 
 @socketio.on('verificar_sala_existente')
 def verificar_sala_existente(dados):
-    if salas_ativas:
-        codigo = list(salas_ativas.keys())[0] 
+    codigo = dados.get('codigo') if dados else None
+    
+    if codigo and codigo in salas_ativas:
         sala = salas_ativas[codigo]
         sala['host_sid'] = request.sid
         join_room(codigo)
         
-        nome_host = dados.get('nome_host') if dados else None
+        nome_host = dados.get('nome_host')
         if nome_host:
             for j in sala['jogadores']:
                 if j['nome'] == nome_host:
@@ -293,11 +288,11 @@ def verificar_sala_existente(dados):
             'prontos_computados': len(sala.get('jogadores_prontos', set()))
         }
         emit('sala_recuperada', estado)
-    else: emit('nenhuma_sala_ativa')
+    else: 
+        emit('nenhuma_sala_ativa')
 
 @socketio.on('criar_sala')
 def criar_sala():
-    salas_ativas.clear() 
     codigo = gerar_codigo_sala()
     salas_ativas[codigo] = {
         'host_sid': request.sid, 'id_partida': str(uuid.uuid4())[:8], 'jogadores': [],
@@ -311,14 +306,19 @@ def criar_sala():
     carregar_dados_sala_do_banco(salas_ativas[codigo])
     join_room(codigo)
     socketio.start_background_task(heartbeat_sala, codigo)
-    emit('sala_criada_sucesso', {'codigo': codigo, 'temas': list(BANCO_PALAVRAS.keys())})
+    emit('sala_criada_sucesso', {'codigo': codigo, 'temas': list(BANCO_PALAVRAS.keys())}, to=request.sid)
 
 @socketio.on('destruir_sala')
 def destruir_sala(dados):
-    if salas_ativas:
-        codigo = list(salas_ativas.keys())[0]
+    codigo = dados.get('codigo')
+    senha = dados.get('senha')
+    if senha != '5813':
+        emit('alerta_host', {'mensagem': 'Senha de administrador incorreta!'}, to=request.sid)
+        return
+        
+    if codigo in salas_ativas:
         emit('sala_destruida', {}, to=codigo) 
-        salas_ativas.clear()
+        del salas_ativas[codigo]
 
 @socketio.on('forcar_avanco')
 def forcar_avanco(dados):
@@ -338,6 +338,10 @@ def solicitar_coroacao(dados):
 
 @socketio.on('deletar_jogador_banco')
 def deletar_jogador_banco(dados):
+    if dados.get('senha') != '5813':
+        emit('alerta_host', {'mensagem': 'Senha incorreta!'}, to=request.sid)
+        return
+        
     nome = dados.get('nome')
     if not nome: return
     try:
@@ -355,6 +359,10 @@ def deletar_jogador_banco(dados):
 
 @socketio.on('resetar_banco')
 def resetar_banco(dados):
+    if dados.get('senha') != '5813':
+        emit('alerta_host', {'mensagem': 'Senha incorreta!'}, to=request.sid)
+        return
+        
     tipo = dados.get('tipo')
     try:
         with engine.begin() as conn:
@@ -497,13 +505,13 @@ def iniciar_partida(dados):
     categoria = dados.get('categoria')
     if categoria == "Aleatório": categoria = random.choice(list(BANCO_PALAVRAS.keys()))
     
-    opcoes = [p for p in BANCO_PALAVRAS[categoria] if p[0] not in sala['palavras_usadas']]
+    opcoes = [p for p in BANCO_PALAVRAS[categoria] if f"{categoria}:{p[0]}" not in sala['palavras_usadas']]
     if not opcoes:
         opcoes = BANCO_PALAVRAS[categoria]
-        sala['palavras_usadas'].difference_update({p[0] for p in BANCO_PALAVRAS[categoria]})
+        sala['palavras_usadas'] = {u for u in sala['palavras_usadas'] if not str(u).startswith(f"{categoria}:")}
 
     palavra_secreta, dica_vaga = random.choice(opcoes)
-    sala['palavras_usadas'].add(palavra_secreta)
+    sala['palavras_usadas'].add(f"{categoria}:{palavra_secreta}")
 
     prob_caos = int(dados.get('caos', 10)); prob_trapaca = int(dados.get('trapaca', 20))
     caos_ativo = False
@@ -555,7 +563,6 @@ def clicou_ja_foi(dados):
     nome = dados.get('nome')
     if nome:
         sala['jogadores_ja_foi'].add(nome)
-        # BOTAO MOSTRARÁ A CONTAGEM AO VIVO
         emit('atualizar_contagem_ja_foi', {'clicados': len(sala['jogadores_ja_foi']), 'total': len(sala['jogadores'])}, to=codigo)
         checar_avanco_ja_foi(codigo)
 
@@ -612,7 +619,7 @@ def encerrar_votacao_interna(codigo):
     pontos_da_rodada = {}; detalhes_rodada = {}
     for j in sala['jogadores']:
         nome = j['nome']; eh_impostor = nome in sala['impostores_atuais']
-        votos_recebidos = contagem.get(nome, 0); votos_dados = votos.get(nome, [])
+        votos_recebidos = contagem.get(nome, 0); votos_dados = votos.get(nome) or []
         acertos_detetive = sum(1 for v in votos_dados if v in sala['impostores_atuais']) if not eh_impostor else 0
         
         pts = 0
