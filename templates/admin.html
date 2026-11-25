@@ -61,14 +61,14 @@
     <div class="container" id="painel-inicio">
         <h1 style="font-size: 55px; margin-bottom: 0; color: #f5f5f5;">L E O P O S T E R</h1>
         <p style="color: #888; font-style: italic;">Onde o filho chora e a mãe não vê</p>
-        <button onclick="criarSala()">Criar Nova Partida</button>
+        <button id="btn-criar-sala" onclick="criarSala()">Criar Nova Partida</button>
         <div style="margin-top: 20px;">
             <button class="btn-coroacao" onclick="pedirCoroacao('Dia')">👑 Coroação do Dia</button>
             <button class="btn-coroacao" onclick="pedirCoroacao('Semana')" style="background-color: #d35400;">👑 Coroação da Semana</button>
             <button class="btn-coroacao" onclick="pedirCoroacao('Geral')" style="background-color: #a04000;">👑 Coroação Geral</button>
         </div>
         <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 20px;">
-            <button onclick="abrirPainelBanco()" style="background-color: #34495e; font-size: 14px; width: auto; padding: 10px 20px;">⚙️ Gerenciar Banco de Dados</button>
+            <button onclick="abrirPainelBanco()" style="background-color: #34495e; font-size: 14px; width: auto; padding: 10px 20px;">🔒 Gerenciar Banco de Dados (Admin)</button>
         </div>
     </div>
 
@@ -104,7 +104,7 @@
                 <label>Impostores Base:</label>
                 <input type="number" id="cfg-imp" value="1" min="1">
             </div>
-            
+
             <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: #222; padding: 15px; border-radius: 8px; border: 1px solid #444;">
                 <label style="margin-bottom: 10px; color: white;">Como o painel irá se comportar?</label>
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
@@ -143,7 +143,7 @@
         <div id="slide-handle" onclick="toggleSlide()">◀ Meu Cartão</div>
         <div id="slide-content" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
             <button onclick="closeSlide()" style="background-color: #555; width: 100%; max-width: 360px; padding: 12px; font-size: 16px; border-radius: 8px; margin-bottom: 20px;">⬅ Voltar para a Tela Principal</button>
-            
+
             <div class="drawer-box" id="host-config-modo">
                 <label style="color: white; margin-bottom: 10px; display: block; font-weight: bold;">Modo de Transmissão:</label>
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
@@ -173,7 +173,7 @@
                     <div id="host-grade-emojis" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 180px; overflow-y: auto;"></div>
                 </div>
             </div>
-            
+
             <button id="btn-iniciar-drawer" class="escondido" style="background-color: #555; max-width: 360px; margin-bottom: 20px;" onclick="iniciarPartida()" disabled>Aguardando Jogadores...</button>
 
             <div class="drawer-box escondido" id="host-painel-secreto" style="border: 4px solid transparent;">
@@ -182,7 +182,7 @@
                 <div id="host-caos-alerta" class="escondido" style="color: #f1c40f; font-weight: bold; font-size: 13px; margin-bottom: 8px;">⚠️ ADVERTÊNCIA: CAOS ATIVO</div>
                 <div class="palavra-gigante" id="host-palavra-secreta" style="font-size: 50px; margin: 20px 0; font-weight: bold;">----</div>
                 <p id="host-trapaca-alerta" class="escondido" style="color: #e67e22; font-weight: bold; font-size: 16px; background: #2c1a0a; padding: 10px; border-radius: 4px;">Cúmplices: <span id="host-equipe-nomes"></span></p>
-                
+
                 <button onclick="ocultarTelaSecretaHost()" style="background-color: #333; margin-top: 20px;">Ocultar Informações</button>
                 <button class="btn-ja-foi" onclick="clicouJaFoiHost()" style="background-color: #d35400; margin-top: 15px; font-size: 14px;">Palavra Repetida (Já foi!)</button>
             </div>
@@ -196,7 +196,7 @@
                 <div id="host-botoes-votacao" style="max-height: 40vh; overflow-y: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;"></div>
                 <button id="host-btn-submeter-voto" onclick="submeterVotoHost()" disabled style="background-color: #2ecc71; margin-top: 20px;">Confirmar Voto</button>
             </div>
-            
+
             <div class="drawer-box escondido" id="host-painel-cadeado" style="border: 2px solid #555; padding: 40px;">
                 <h1 style="font-size: 60px; margin: 0;">🔒</h1>
                 <h2>Área Restrita</h2>
@@ -210,7 +210,7 @@
     <div class="container escondido" id="painel-jogo">
         <h1 style="font-size: 50px; color: #e74c3c; margin-top: 0;">INTERROGATÓRIO</h1>
         <h2 style="color: #f1c40f;">Quem inicia o debate: <br><span id="primeiro-falar" style="font-size: 40px;">---</span></h2>
-        
+
         <div id="bloco-aguardando">
             <p style="font-size: 18px; color: #aaa;">Aguardando jogadores memorizarem os papéis...</p>
             <p style="font-size: 20px; font-weight: bold; color: #3498db;">Prontos: <span id="leitura-contagem">0</span> / <span id="leitura-total">0</span></p>
@@ -252,7 +252,7 @@
         <p id="palavra-revelada" style="font-size: 20px; color: #7f8c8d; margin-top: 40px;"></p>
         <h3 style="color: #3498db; margin-top: 40px;">PLACAR DA SESSÃO</h3>
         <ul id="lista-placar-atual" style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></ul>
-        
+
         <button onclick="iniciarPartida()" style="background-color: #2ecc71; margin-top: 20px;">▶️ Iniciar Próxima Rodada (Mesmo Tema)</button>
         <button onclick="voltarAoLobby()" style="background-color: #8e44ad; margin-top: 10px;">⚙️ Voltar ao Menu da Sala (Trocar Tema)</button>
         <button onclick="destruirSala()" style="background-color: #c0392b; margin-top: 10px;">🛑 Encerrar Sala e Voltar ao Início</button>
@@ -267,95 +267,230 @@
     <script>
         const socket = io();
         let codigo_atual = "";
+        let host_token_atual = "";
+        let senhaAdminAtual = "";
         let cfgTempoGlobal = 120;
         let intervaloTimer = null;
+        let intervaloSuspense = null;
         let modoJogoAtual = 'host';
-        
+
         let local_fase = 'lobby';
-        let local_iteracao = 0;
+        let local_iteracao = -1;
 
         let souJogador = false;
         let meuNomeHost = "";
-        const TODOS_EMOJIS = ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄", "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝", "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"];
+        const TODOS_EMOJIS = [
+            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
+            "🦁", "🐮", "🐷", "🐸", "🐵", "🐙", "🐢", "🦕", "🦞", "🦄",
+            "👽", "🤖", "👻", "👾", "🦉", "🦇", "🐺", "🐗", "🐴", "🐝",
+            "🐛", "🦋", "🐌", "🐞", "🐜", "🐠", "🐬", "🐳", "🦈", "🐊",
+            "🐅", "🐆", "🦓", "🦍", "🐘", "🦛", "🦏", "🐪", "🦒", "🦘"
+        ];
         let listaJogadoresCache = [];
         let hostVotosSelecionados = [];
         let hostMaxVotos = 1;
 
-        let host_papel_oculto = false;
-        let hostFaseVotacaoRenderizada = false;
+        let host_papel_oculto_iteracao = -1;
+        let host_votacao_iteracao_renderizada = -1;
+        let host_resultado_iteracao_exibida = -1;
 
-        window.onload = () => { 
-            window.moveTo(0, 0); window.resizeTo(screen.availWidth, screen.availHeight); 
-        };
+        function authPayload(extra = {}) {
+            return Object.assign({
+                codigo: codigo_atual,
+                host_token: host_token_atual,
+                senha: senhaAdminAtual
+            }, extra);
+        }
 
-        socket.on('connect', () => { 
+        function limparStorageHost() {
+            localStorage.removeItem('leoposter_host_nome');
+            localStorage.removeItem('leoposter_host_codigo');
+            localStorage.removeItem('leoposter_host_token');
+        }
+
+        function esconderTodosPaineis() {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
+        }
+
+        function esconderCaixasGaveta() {
+            document.getElementById('host-painel-login').classList.add('escondido');
+            document.getElementById('host-painel-espera').classList.add('escondido');
+            document.getElementById('host-painel-secreto').classList.add('escondido');
+            document.getElementById('host-painel-votacao-interna').classList.add('escondido');
+            document.getElementById('host-painel-cadeado').classList.add('escondido');
+        }
+
+        socket.on('connect', () => {
             const nomeSalvo = localStorage.getItem('leoposter_host_nome');
-            socket.emit('verificar_sala_existente', { nome_host: nomeSalvo }); 
+            const codigoSalvo = localStorage.getItem('leoposter_host_codigo');
+            const tokenSalvo = localStorage.getItem('leoposter_host_token');
+            if (codigoSalvo && tokenSalvo) {
+                codigo_atual = codigoSalvo;
+                host_token_atual = tokenSalvo;
+                socket.emit('verificar_sala_existente', {
+                    nome_host: nomeSalvo,
+                    codigo: codigoSalvo,
+                    host_token: tokenSalvo,
+                    senha: senhaAdminAtual
+                });
+            } else {
+                esconderTodosPaineis();
+                document.getElementById('painel-inicio').classList.remove('escondido');
+            }
         });
 
-        // MECANISMO DE HEARTBEAT DE ESTADO (TRAVA O PISCA-PISCA)
         socket.on('sync_estado_host', (dados) => {
+            if (!codigo_atual) return;
             if (dados.fase !== local_fase || dados.iteracao !== local_iteracao) {
                 const nomeSalvo = localStorage.getItem('leoposter_host_nome');
-                socket.emit('pedir_sync_host', {codigo: codigo_atual, nome_host: nomeSalvo});
+                socket.emit('pedir_sync_host', authPayload({ nome_host: nomeSalvo }));
             }
         });
 
         socket.on('nenhuma_sala_ativa', () => {
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
+            limparStorageHost();
+            codigo_atual = "";
+            host_token_atual = "";
+            souJogador = false;
+            meuNomeHost = "";
+            local_fase = 'lobby';
+            local_iteracao = -1;
+            clearInterval(intervaloTimer);
+            clearInterval(intervaloSuspense);
+            closeSlide();
+            document.getElementById('slide-overlay').classList.add('inativo');
+            esconderTodosPaineis();
             document.getElementById('painel-inicio').classList.remove('escondido');
         });
+
+        socket.on('sala_destruida', () => {
+            limparStorageHost();
+            codigo_atual = "";
+            host_token_atual = "";
+            souJogador = false;
+            meuNomeHost = "";
+            local_fase = 'lobby';
+            local_iteracao = -1;
+            clearInterval(intervaloTimer);
+            clearInterval(intervaloSuspense);
+            closeSlide();
+            document.getElementById('slide-overlay').classList.add('inativo');
+            esconderTodosPaineis();
+            document.getElementById('painel-inicio').classList.remove('escondido');
+        });
+
+        function popularTemas(temas) {
+            const selectTema = document.getElementById('cfg-tema');
+            const valorAnterior = selectTema.value;
+            selectTema.innerHTML = '<option value="Aleatório">🎲 Escolha Aleatória</option>';
+            if (temas) {
+                temas.forEach(tema => {
+                    selectTema.innerHTML += `<option value="${tema}">${tema}</option>`;
+                });
+            }
+            if (valorAnterior) selectTema.value = valorAnterior;
+        }
+
+        function iniciarContagemTimerHost(tempoRestanteInicial, tempoTotal) {
+            document.getElementById('bloco-aguardando').classList.add('escondido');
+            document.getElementById('bloco-timer').classList.remove('escondido');
+            let tempoRestante = Math.max(0, tempoRestanteInicial);
+            let total = Math.max(1, tempoTotal || tempoRestante || 1);
+            const ampFill = document.getElementById('ampulheta-fill');
+            const display = document.getElementById('timer-restante');
+
+            const atualizarBarra = () => {
+                display.innerText = tempoRestante + "s";
+                let pct = Math.min(100, Math.max(0, ((total - tempoRestante) / total) * 100));
+                ampFill.style.width = pct + '%';
+            };
+            atualizarBarra();
+
+            clearInterval(intervaloTimer);
+            if (tempoRestante <= 0) {
+                irParaVotacao();
+                return;
+            }
+            intervaloTimer = setInterval(() => {
+                tempoRestante--;
+                atualizarBarra();
+                if (tempoRestante <= 0) {
+                    clearInterval(intervaloTimer);
+                    irParaVotacao();
+                }
+            }, 1000);
+        }
 
         socket.on('sala_recuperada', (dados) => {
             local_fase = dados.fase_atual;
             local_iteracao = dados.iteracao;
             codigo_atual = dados.codigo;
             modoJogoAtual = dados.modo_jogo;
-            
-            const selectTema = document.getElementById('cfg-tema');
-            if (selectTema.options.length <= 1) {
-                selectTema.innerHTML = '<option value="Aleatório">🎲 Escolha Aleatória</option>';
-                if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
+
+            if (document.getElementById('cfg-tema').options.length <= 1) {
+                popularTemas(dados.temas);
             }
-            
+
             document.getElementById('txt-codigo').innerText = codigo_atual;
-            listaJogadoresCache = dados.jogadores;
-            
+            listaJogadoresCache = dados.jogadores || [];
+
             const nomeSalvo = localStorage.getItem('leoposter_host_nome');
-            const euEstouNaSala = listaJogadoresCache.some(j => j.nome === nomeSalvo);
-            
+            const jogadorEncontrado = listaJogadoresCache.find(j => nomeSalvo && j.nome.toLowerCase() === nomeSalvo.toLowerCase());
+
             document.getElementById('cfg-modo-jogo-toggle').checked = (modoJogoAtual === 'host_jogador');
             document.getElementById('cfg-modo-jogo-toggle-drawer').checked = (modoJogoAtual === 'host_jogador');
-            alternarModoJogoSemEmitir();
 
-            if (euEstouNaSala && modoJogoAtual === 'host_jogador') {
+            if (jogadorEncontrado && modoJogoAtual === 'host_jogador') {
                 souJogador = true;
-                meuNomeHost = nomeSalvo;
-                document.getElementById('host-painel-login').classList.add('escondido');
-                document.getElementById('host-painel-espera').classList.remove('escondido');
-                document.getElementById('host-meu-nome-display').innerText = meuNomeHost;
+                meuNomeHost = jogadorEncontrado.nome;
+                localStorage.setItem('leoposter_host_nome', meuNomeHost);
+            } else if (modoJogoAtual !== 'host_jogador') {
+                souJogador = false;
             }
 
-            atualizarListaJogadoresUI(dados.jogadores);
+            alternarModoJogoSemEmitir();
+            atualizarListaJogadoresUI(listaJogadoresCache);
             validarBotaoIniciar();
 
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
-            closeSlide();
-            
+            esconderTodosPaineis();
+
             if (dados.fase_atual === 'lobby') {
+                clearInterval(intervaloTimer);
+                clearInterval(intervaloSuspense);
                 document.getElementById('painel-lobby').classList.remove('escondido');
+                if (modoJogoAtual === 'host_jogador') {
+                    esconderCaixasGaveta();
+                    document.getElementById('host-config-modo').classList.remove('escondido');
+                    if (souJogador) {
+                        document.getElementById('host-painel-espera').classList.remove('escondido');
+                        document.getElementById('host-meu-nome-display').innerText = meuNomeHost;
+                    } else {
+                        document.getElementById('host-painel-login').classList.remove('escondido');
+                    }
+                }
             } else if (dados.fase_atual === 'revelacao') {
+                clearInterval(intervaloTimer);
                 document.getElementById('painel-jogo').classList.remove('escondido');
+                document.getElementById('bloco-timer').classList.add('escondido');
+                document.getElementById('bloco-aguardando').classList.remove('escondido');
                 document.getElementById('primeiro-falar').innerText = dados.primeiro_falar || "---";
                 document.getElementById('leitura-contagem').innerText = dados.prontos_computados || 0;
                 document.getElementById('leitura-total').innerText = dados.total_jogadores || 0;
+            } else if (dados.fase_atual === 'debate') {
+                document.getElementById('painel-jogo').classList.remove('escondido');
+                document.getElementById('primeiro-falar').innerText = dados.primeiro_falar || "---";
+                iniciarContagemTimerHost(dados.tempo_restante, dados.tempo_total);
             } else if (dados.fase_atual === 'votacao') {
+                clearInterval(intervaloTimer);
                 document.getElementById('painel-votacao').classList.remove('escondido');
-                document.getElementById('votos-contagem').innerText = dados.votos_computados;
-                document.getElementById('votos-total').innerText = dados.total_jogadores;
+                document.getElementById('votos-contagem').innerText = dados.votos_computados || 0;
+                document.getElementById('votos-total').innerText = dados.total_jogadores || 0;
             } else if (dados.fase_atual === 'resultado') {
+                clearInterval(intervaloTimer);
+                closeSlide();
                 document.getElementById('painel-resultado').classList.remove('escondido');
                 if (dados.ultimo_resultado && dados.ultimo_resultado.destaques) {
+                    host_resultado_iteracao_exibida = dados.iteracao;
                     mostrarResultadoFinal(dados.ultimo_resultado);
                 }
             }
@@ -365,40 +500,66 @@
             document.getElementById(id).innerText = val;
         }
 
-        function criarSala() { socket.emit('criar_sala'); }
+        function criarSala() {
+            const btn = document.getElementById('btn-criar-sala');
+            btn.disabled = true;
+            btn.innerText = "Criando Sala...";
+            socket.emit('criar_sala');
+            setTimeout(() => {
+                if (!codigo_atual) {
+                    btn.disabled = false;
+                    btn.innerText = "Criar Nova Partida";
+                }
+            }, 3000);
+        }
 
         function destruirSala() {
-            if(confirm("Deseja encerrar a sala e desconectar todos os celulares permanentemente?")) {
-                socket.emit('destruir_sala', {});
-                localStorage.removeItem('leoposter_host_nome');
-                souJogador = false; meuNomeHost = "";
-                setTimeout(() => { location.reload(); }, 500);
+            if (confirm("Deseja encerrar a sala e desconectar todos os celulares permanentemente?")) {
+                socket.emit('destruir_sala', authPayload());
             }
         }
 
         socket.on('sala_criada_sucesso', (dados) => {
+            const btn = document.getElementById('btn-criar-sala');
+            btn.disabled = false;
+            btn.innerText = "Criar Nova Partida";
+
             local_fase = 'lobby';
             local_iteracao = 0;
             codigo_atual = dados.codigo;
-            document.getElementById('painel-inicio').classList.add('escondido');
+            host_token_atual = dados.host_token;
+            souJogador = false;
+            meuNomeHost = "";
+            modoJogoAtual = 'host';
+            listaJogadoresCache = [];
+
+            localStorage.setItem('leoposter_host_codigo', codigo_atual);
+            localStorage.setItem('leoposter_host_token', host_token_atual);
+            localStorage.removeItem('leoposter_host_nome');
+
+            document.getElementById('cfg-modo-jogo-toggle').checked = false;
+            document.getElementById('cfg-modo-jogo-toggle-drawer').checked = false;
+            alternarModoJogoSemEmitir();
+            closeSlide();
+
+            esconderTodosPaineis();
             document.getElementById('painel-lobby').classList.remove('escondido');
             document.getElementById('txt-codigo').innerText = codigo_atual;
-
-            const selectTema = document.getElementById('cfg-tema');
-            selectTema.innerHTML = '<option value="Aleatório">🎲 Escolha Aleatória</option>';
-            if (dados.temas) { dados.temas.forEach(tema => { selectTema.innerHTML += `<option value="${tema}">${tema}</option>`; }); }
+            popularTemas(dados.temas);
+            atualizarListaJogadoresUI([]);
         });
 
         let slideOverlay = document.getElementById('slide-overlay');
-        let slideIsOpen = false; let startX = 0;
-        function toggleSlide() { if(slideIsOpen) closeSlide(); else openSlide(); }
+        let slideIsOpen = false;
+        let startX = 0;
+        function toggleSlide() { if (slideIsOpen) closeSlide(); else openSlide(); }
         function openSlide() { slideOverlay.style.right = '0'; slideIsOpen = true; }
         function closeSlide() { slideOverlay.style.right = '-100vw'; slideIsOpen = false; }
 
         document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
         document.addEventListener('touchend', e => {
             let diff = e.changedTouches[0].clientX - startX;
-            if (!slideIsOpen && diff < -60 && startX > window.innerWidth - 80) openSlide();
+            if (!slideIsOpen && diff < -60 && startX > window.innerWidth - 80 && !slideOverlay.classList.contains('inativo')) openSlide();
             if (slideIsOpen && diff > 60) closeSlide();
         });
 
@@ -409,6 +570,8 @@
 
         function alternarModoJogoSemEmitir() {
             const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
+            document.getElementById('cfg-modo-jogo-toggle-drawer').checked = toggle;
+
             document.getElementById('lbl-modo-host').style.color = toggle ? '#555' : '#3498db';
             document.getElementById('lbl-modo-jogador').style.color = toggle ? '#3498db' : '#555';
             document.getElementById('lbl-modo-host-drawer').style.color = toggle ? '#555' : '#3498db';
@@ -416,35 +579,61 @@
 
             if (toggle) {
                 document.getElementById('slide-overlay').classList.remove('inativo');
-                document.getElementById('host-config-modo').classList.remove('escondido');
-                if(!souJogador) document.getElementById('host-painel-login').classList.remove('escondido');
+                if (local_fase === 'lobby') {
+                    document.getElementById('host-config-modo').classList.remove('escondido');
+                    if (!souJogador) {
+                        document.getElementById('host-painel-login').classList.remove('escondido');
+                        document.getElementById('host-painel-espera').classList.add('escondido');
+                    } else {
+                        document.getElementById('host-painel-login').classList.add('escondido');
+                        document.getElementById('host-painel-espera').classList.remove('escondido');
+                    }
+                }
             } else {
                 document.getElementById('slide-overlay').classList.add('inativo');
             }
         }
 
         function alternarModoJogo() {
-            alternarModoJogoSemEmitir();
             const toggle = document.getElementById('cfg-modo-jogo-toggle').checked;
             modoJogoAtual = toggle ? 'host_jogador' : 'host';
-            
+            alternarModoJogoSemEmitir();
+
+            if (codigo_atual) {
+                socket.emit('atualizar_modo_jogo', authPayload({ modo_jogo: modoJogoAtual }));
+            }
+
             if (toggle) {
-                if(!souJogador) openSlide();
+                if (!souJogador) openSlide();
             } else {
                 closeSlide();
-                if(souJogador) { socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: meuNomeHost }); }
+                if (souJogador) {
+                    socket.emit('expulsar_jogador', authPayload({ nome: meuNomeHost }));
+                    souJogador = false;
+                    meuNomeHost = "";
+                    localStorage.removeItem('leoposter_host_nome');
+                    document.getElementById('host-painel-espera').classList.add('escondido');
+                    document.getElementById('host-nome-input').value = "";
+                }
             }
             validarBotaoIniciar();
         }
 
         function entrarHostComoJogador() {
             meuNomeHost = document.getElementById('host-nome-input').value.trim();
-            if (meuNomeHost && codigo_atual) { socket.emit('entrar_na_sala', { nome: meuNomeHost, codigo: codigo_atual }); }
+            if (meuNomeHost && codigo_atual) {
+                socket.emit('entrar_na_sala', { nome: meuNomeHost, codigo: codigo_atual });
+            }
         }
 
+        socket.on('erro_conexao', (dados) => {
+            alert(dados.mensagem);
+        });
+
         socket.on('entrada_sucesso', (dados) => {
-            if (dados.nome === meuNomeHost) {
+            if (meuNomeHost && dados.nome.toLowerCase() === meuNomeHost.toLowerCase()) {
                 souJogador = true;
+                meuNomeHost = dados.nome;
                 localStorage.setItem('leoposter_host_nome', meuNomeHost);
                 document.getElementById('host-painel-login').classList.add('escondido');
                 document.getElementById('host-painel-espera').classList.remove('escondido');
@@ -454,18 +643,31 @@
         });
 
         socket.on('lista_jogadores_atualizada', (dados) => {
-            listaJogadoresCache = dados.jogadores;
-            atualizarListaJogadoresUI(dados.jogadores);
+            listaJogadoresCache = dados.jogadores || [];
+            atualizarListaJogadoresUI(listaJogadoresCache);
         });
 
         function atualizarListaJogadoresUI(jogadores) {
-            const ul = document.getElementById('lista-jogadores'); ul.innerHTML = '';
+            const ul = document.getElementById('lista-jogadores');
+            ul.innerHTML = '';
             jogadores.forEach(j => {
-                ul.innerHTML += `<li class="jogador-card"><span>${j.emoji} <strong>${j.nome}</strong></span>
-                <button class="btn-expulsar" onclick="expulsar('${j.nome}')" title="Expulsar">✖</button></li>`;
+                const li = document.createElement('li');
+                li.className = 'jogador-card';
+                const span = document.createElement('span');
+                span.innerHTML = `${j.emoji} <strong></strong>`;
+                span.querySelector('strong').innerText = j.nome;
+                const btn = document.createElement('button');
+                btn.className = 'btn-expulsar';
+                btn.title = 'Expulsar';
+                btn.innerText = '✖';
+                btn.onclick = () => expulsar(j.nome);
+                li.appendChild(span);
+                li.appendChild(btn);
+                ul.appendChild(li);
             });
             document.getElementById('contagem').innerText = jogadores.length;
-            renderizarGradeEmojisHost(); validarBotaoIniciar();
+            renderizarGradeEmojisHost();
+            validarBotaoIniciar();
         }
 
         function validarBotaoIniciar() {
@@ -473,35 +675,54 @@
             const btn2 = document.getElementById('btn-iniciar-drawer');
             let podeIniciar = listaJogadoresCache.length >= 3;
             if (modoJogoAtual === 'host_jogador' && !souJogador) podeIniciar = false;
-            
-            btn1.disabled = !podeIniciar; btn1.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555'; btn1.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
-            btn2.disabled = !podeIniciar; btn2.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555'; btn2.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
-            if (modoJogoAtual === 'host_jogador') btn2.classList.remove('escondido'); else btn2.classList.add('escondido');
+
+            btn1.disabled = !podeIniciar;
+            btn1.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555';
+            btn1.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+            btn2.disabled = !podeIniciar;
+            btn2.style.backgroundColor = podeIniciar ? '#8e44ad' : '#555';
+            btn2.innerText = podeIniciar ? "Iniciar Rodada" : "Aguardando Requisitos...";
+            if (modoJogoAtual === 'host_jogador' && local_fase === 'lobby') btn2.classList.remove('escondido');
+            else btn2.classList.add('escondido');
         }
 
         function renderizarGradeEmojisHost() {
             if (modoJogoAtual !== 'host_jogador') return;
-            const grade = document.getElementById('host-grade-emojis'); if(!grade) return;
+            const grade = document.getElementById('host-grade-emojis');
+            if (!grade) return;
             grade.innerHTML = '';
             const meuJogador = listaJogadoresCache.find(j => j.nome === meuNomeHost);
             if (meuJogador) document.getElementById('host-meu-emoji-display').innerText = meuJogador.emoji;
 
             TODOS_EMOJIS.forEach(emoji => {
-                const container = document.createElement('div'); container.className = 'emoji-opt-container';
+                const container = document.createElement('div');
+                container.className = 'emoji-opt-container';
                 const dono = listaJogadoresCache.find(j => j.emoji === emoji);
                 if (dono) {
-                    if (dono.nome === meuNomeHost) { container.classList.add('selecionado'); container.innerText = emoji; } 
-                    else { container.classList.add('ocupado'); container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji">${dono.nome}</div>`; }
-                } else { container.innerText = emoji; container.onclick = () => { if (souJogador) socket.emit('trocar_emoji', {codigo: codigo_atual, nome: meuNomeHost, emoji: emoji}); }; }
+                    if (dono.nome === meuNomeHost) {
+                        container.classList.add('selecionado');
+                        container.innerText = emoji;
+                    } else {
+                        container.classList.add('ocupado');
+                        container.innerHTML = `<span>${emoji}</span><div class="nome-sobre-emoji"></div>`;
+                        container.querySelector('.nome-sobre-emoji').innerText = dono.nome;
+                    }
+                } else {
+                    container.innerText = emoji;
+                    container.onclick = () => {
+                        if (souJogador) socket.emit('trocar_emoji', { codigo: codigo_atual, nome: meuNomeHost, emoji: emoji });
+                    };
+                }
                 grade.appendChild(container);
             });
         }
 
         function expulsar(nomeJogador) {
-            if(confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
-                socket.emit('expulsar_jogador', { codigo: codigo_atual, nome: nomeJogador });
+            if (confirm(`Tem certeza que deseja expulsar ${nomeJogador}?`)) {
+                socket.emit('expulsar_jogador', authPayload({ nome: nomeJogador }));
                 if (nomeJogador === meuNomeHost) {
-                    souJogador = false; meuNomeHost = "";
+                    souJogador = false;
+                    meuNomeHost = "";
                     localStorage.removeItem('leoposter_host_nome');
                     document.getElementById('host-painel-espera').classList.add('escondido');
                     document.getElementById('host-nome-input').value = "";
@@ -511,31 +732,44 @@
             }
         }
 
-        function adjTimer(val) { cfgTempoGlobal += val; if (cfgTempoGlobal < 30) cfgTempoGlobal = 30; document.getElementById('cfg-timer-display').innerText = cfgTempoGlobal + "s"; }
+        function adjTimer(val) {
+            cfgTempoGlobal += val;
+            if (cfgTempoGlobal < 30) cfgTempoGlobal = 30;
+            document.getElementById('cfg-timer-display').innerText = cfgTempoGlobal + "s";
+        }
 
         function iniciarPartida() {
-            host_papel_oculto = false; hostFaseVotacaoRenderizada = false;
-            
-            // Força esconder as telas passadas antes de dar play
+            host_papel_oculto_iteracao = -1;
+            host_votacao_iteracao_renderizada = -1;
+            host_resultado_iteracao_exibida = -1;
+            clearInterval(intervaloTimer);
+            clearInterval(intervaloSuspense);
+
             document.getElementById('painel-resultado').classList.add('escondido');
             document.getElementById('painel-suspense').classList.add('escondido');
             document.getElementById('painel-votacao').classList.add('escondido');
-            
+
             document.getElementById('host-painel-espera').classList.add('escondido');
             document.getElementById('host-config-modo').classList.add('escondido');
             document.getElementById('btn-iniciar-drawer').classList.add('escondido');
-            
-            socket.emit('iniciar_partida', { codigo: codigo_atual, modo_jogo: modoJogoAtual, categoria: document.getElementById('cfg-tema').value, imp_base: document.getElementById('cfg-imp').value, caos: document.getElementById('cfg-caos').value, trapaca: document.getElementById('cfg-trapaca').value, tempo: cfgTempoGlobal });
-        }
-        
-        function forcarAvanco() {
-            socket.emit('forcar_avanco', { codigo: codigo_atual });
+
+            socket.emit('iniciar_partida', authPayload({
+                modo_jogo: modoJogoAtual,
+                categoria: document.getElementById('cfg-tema').value,
+                imp_base: document.getElementById('cfg-imp').value,
+                caos: document.getElementById('cfg-caos').value,
+                trapaca: document.getElementById('cfg-trapaca').value,
+                tempo: cfgTempoGlobal
+            }));
         }
 
-        // AGORA O SERVIDOR GRITA PARA A SALA INTEIRA QUANDO UM JOGADOR LÊ
-        socket.on('progresso_leitura_host', (dados) => { 
-            document.getElementById('leitura-contagem').innerText = dados.prontos; 
-            document.getElementById('leitura-total').innerText = dados.total; 
+        function forcarAvanco() {
+            socket.emit('forcar_avanco', authPayload());
+        }
+
+        socket.on('progresso_leitura_host', (dados) => {
+            document.getElementById('leitura-contagem').innerText = dados.prontos;
+            document.getElementById('leitura-total').innerText = dados.total;
         });
 
         socket.on('atualizar_contagem_ja_foi', (dados) => {
@@ -551,51 +785,67 @@
         socket.on('distribuir_papeis', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
-            
+
             if (modoJogoAtual === 'host_jogador' && souJogador) {
                 socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'revelacao' });
-                
-                if (!dados.ja_confirmou) { host_papel_oculto = false; }
-                if (host_papel_oculto) return;
-                
-                document.getElementById('host-painel-cadeado').classList.add('escondido');
-                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
-                document.getElementById('host-painel-secreto').classList.remove('escondido');
-                document.getElementById('host-tema-display').innerText = dados.tema; document.getElementById('host-palavra-secreta').innerText = dados.palavra_ou_dica;
-                if (dados.caos_ativo) document.getElementById('host-caos-alerta').classList.remove('escondido'); else document.getElementById('host-caos-alerta').classList.add('escondido');
 
-                const painelSec = document.getElementById('host-painel-secreto');
-                if (dados.papel === 'impostor') {
-                    painelSec.style.borderColor = "#e74c3c"; document.getElementById('host-papel-titulo').innerText = "VOCÊ É O IMPOSTOR"; document.getElementById('host-papel-titulo').style.color = "#e74c3c";
-                    if (dados.equipe && dados.equipe.length > 0) { document.getElementById('host-trapaca-alerta').classList.remove('escondido'); document.getElementById('host-equipe-nomes').innerText = dados.equipe.join(', '); } 
-                    else { document.getElementById('host-trapaca-alerta').classList.add('escondido'); }
+                if (!dados.ja_confirmou && host_papel_oculto_iteracao !== dados.iteracao) {
+                    esconderCaixasGaveta();
+                    document.getElementById('host-painel-secreto').classList.remove('escondido');
+                    document.getElementById('host-tema-display').innerText = dados.tema;
+                    document.getElementById('host-palavra-secreta').innerText = dados.palavra_ou_dica;
+                    if (dados.caos_ativo) document.getElementById('host-caos-alerta').classList.remove('escondido');
+                    else document.getElementById('host-caos-alerta').classList.add('escondido');
+
+                    const painelSec = document.getElementById('host-painel-secreto');
+                    if (dados.papel === 'impostor') {
+                        painelSec.style.borderColor = "#e74c3c";
+                        document.getElementById('host-papel-titulo').innerText = "VOCÊ É O IMPOSTOR";
+                        document.getElementById('host-papel-titulo').style.color = "#e74c3c";
+                        if (dados.equipe && dados.equipe.length > 0) {
+                            document.getElementById('host-trapaca-alerta').classList.remove('escondido');
+                            document.getElementById('host-equipe-nomes').innerText = dados.equipe.join(', ');
+                        } else {
+                            document.getElementById('host-trapaca-alerta').classList.add('escondido');
+                        }
+                    } else {
+                        painelSec.style.borderColor = "#2ecc71";
+                        document.getElementById('host-papel-titulo').innerText = "VOCÊ É INOCENTE";
+                        document.getElementById('host-papel-titulo').style.color = "#2ecc71";
+                        document.getElementById('host-trapaca-alerta').classList.add('escondido');
+                    }
+
+                    document.querySelectorAll('.btn-ja-foi').forEach(btn => {
+                        btn.classList.remove('escondido');
+                        btn.disabled = !!dados.ja_votou_ja_foi;
+                        btn.style.opacity = dados.ja_votou_ja_foi ? '0.5' : '1';
+                        btn.innerText = dados.ja_votou_ja_foi
+                            ? `Aguardando... (${dados.ja_foi_clicados || 0}/${dados.total_jogadores || 0})`
+                            : "Palavra Repetida (Já foi!)";
+                    });
+
+                    openSlide();
                 } else {
-                    painelSec.style.borderColor = "#2ecc71"; document.getElementById('host-papel-titulo').innerText = "VOCÊ É INOCENTE"; document.getElementById('host-papel-titulo').style.color = "#2ecc71"; document.getElementById('host-trapaca-alerta').classList.add('escondido');
+                    esconderCaixasGaveta();
+                    document.getElementById('host-painel-cadeado').classList.remove('escondido');
                 }
-                
-                document.querySelectorAll('.btn-ja-foi').forEach(btn => {
-                    btn.classList.remove('escondido');
-                    btn.disabled = dados.ja_votou_ja_foi;
-                    btn.style.opacity = dados.ja_votou_ja_foi ? '0.5' : '1';
-                    btn.innerText = dados.ja_votou_ja_foi ? "Aguardando..." : "Palavra Repetida (Já foi!)";
-                });
-                
-                openSlide(); // Auto-abre a gaveta!
             }
         });
 
         function ocultarTelaSecretaHost() {
-            host_papel_oculto = true;
+            host_papel_oculto_iteracao = local_iteracao;
             document.getElementById('host-painel-secreto').classList.add('escondido');
             document.getElementById('host-painel-cadeado').classList.remove('escondido');
             socket.emit('confirmar_leitura_papel', { codigo: codigo_atual, nome: meuNomeHost });
-            closeSlide(); // Auto-fecha a gaveta!
+            closeSlide();
         }
-        
+
         function clicouJaFoiHost() {
             socket.emit('clicou_ja_foi', { codigo: codigo_atual, nome: meuNomeHost });
             document.querySelectorAll('.btn-ja-foi').forEach(btn => {
-                btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = "Registrando...";
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.innerText = "Registrando...";
             });
         }
 
@@ -603,96 +853,169 @@
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
             document.querySelectorAll('.btn-ja-foi').forEach(btn => btn.classList.add('escondido'));
-            
+
             if (modoJogoAtual === 'host_jogador' && souJogador) {
                 socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'votacao' });
-                if (dados.ja_votou) { document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); return; }
-                if (hostFaseVotacaoRenderizada) return;
-                hostFaseVotacaoRenderizada = true;
+                if (dados.ja_votou) {
+                    esconderCaixasGaveta();
+                    document.getElementById('host-painel-cadeado').classList.remove('escondido');
+                    return;
+                }
 
-                document.getElementById('host-painel-cadeado').classList.add('escondido');
+                const telaVotoVisivel = !document.getElementById('host-painel-votacao-interna').classList.contains('escondido');
+                if (host_votacao_iteracao_renderizada === dados.iteracao && telaVotoVisivel) return;
+                host_votacao_iteracao_renderizada = dados.iteracao;
+
+                esconderCaixasGaveta();
                 document.getElementById('host-painel-votacao-interna').classList.remove('escondido');
-                hostVotosSelecionados = []; hostMaxVotos = dados.qtd_votos || 1;
-                document.getElementById('host-qtd-alvo').innerText = hostMaxVotos; document.getElementById('host-btn-submeter-voto').disabled = true;
-                if(dados.caos_geral) document.getElementById('host-aviso-caos-votacao').classList.remove('escondido'); else document.getElementById('host-aviso-caos-votacao').classList.add('escondido');
+                hostVotosSelecionados = [];
+                hostMaxVotos = dados.qtd_votos || 1;
+                document.getElementById('host-qtd-alvo').innerText = hostMaxVotos;
+                const btnSub = document.getElementById('host-btn-submeter-voto');
+                btnSub.disabled = true;
+                btnSub.innerText = "Confirmar Voto";
 
-                const divBotoes = document.getElementById('host-botoes-votacao'); divBotoes.innerHTML = '';
+                if (dados.caos_geral) document.getElementById('host-aviso-caos-votacao').classList.remove('escondido');
+                else document.getElementById('host-aviso-caos-votacao').classList.add('escondido');
+
+                const divBotoes = document.getElementById('host-botoes-votacao');
+                divBotoes.innerHTML = '';
                 dados.jogadores.forEach(j => {
-                    if(j.nome !== meuNomeHost) {
-                        const btn = document.createElement('button'); btn.className = 'voto-btn'; btn.innerText = `${j.emoji} ${j.nome}`; btn.style.width = "auto"; btn.style.padding = "10px 15px";
-                        btn.onclick = () => alternarVotoHost(btn, j.nome); divBotoes.appendChild(btn);
+                    if (j.nome !== meuNomeHost) {
+                        const btn = document.createElement('button');
+                        btn.className = 'voto-btn';
+                        btn.innerText = `${j.emoji} ${j.nome}`;
+                        btn.style.width = "auto";
+                        btn.style.padding = "10px 15px";
+                        btn.onclick = () => alternarVotoHost(btn, j.nome);
+                        divBotoes.appendChild(btn);
                     }
                 });
-                
-                openSlide(); // Auto-abre a gaveta pro Host votar!
+
+                openSlide();
             }
         });
 
         function alternarVotoHost(btn, nome) {
-            if (hostVotosSelecionados.includes(nome)) { hostVotosSelecionados = hostVotosSelecionados.filter(n => n !== nome); btn.classList.remove('selecionado'); } 
-            else { if (hostVotosSelecionados.length < hostMaxVotos) { hostVotosSelecionados.push(nome); btn.classList.add('selecionado'); } }
+            if (hostVotosSelecionados.includes(nome)) {
+                hostVotosSelecionados = hostVotosSelecionados.filter(n => n !== nome);
+                btn.classList.remove('selecionado');
+            } else {
+                if (hostVotosSelecionados.length < hostMaxVotos) {
+                    hostVotosSelecionados.push(nome);
+                    btn.classList.add('selecionado');
+                }
+            }
             document.getElementById('host-btn-submeter-voto').disabled = (hostVotosSelecionados.length !== hostMaxVotos);
         }
 
         function submeterVotoHost() {
             if (hostVotosSelecionados.length === hostMaxVotos) {
+                const btnSub = document.getElementById('host-btn-submeter-voto');
+                btnSub.disabled = true;
+                btnSub.innerText = "Enviando...";
                 socket.emit('enviar_voto', { codigo: codigo_atual, nome: meuNomeHost, voto: hostVotosSelecionados });
-                document.getElementById('host-painel-votacao-interna').classList.add('escondido'); document.getElementById('host-painel-cadeado').classList.remove('escondido'); 
-                closeSlide(); // Auto-fecha a gaveta ao confirmar o voto!
             }
         }
+
+        socket.on('voto_confirmado', () => {
+            if (modoJogoAtual === 'host_jogador' && souJogador) {
+                document.getElementById('host-painel-votacao-interna').classList.add('escondido');
+                document.getElementById('host-painel-cadeado').classList.remove('escondido');
+                closeSlide();
+            }
+        });
+
+        socket.on('erro_voto', (dados) => {
+            alert(dados.mensagem || 'Erro ao registrar voto.');
+            const btnSub = document.getElementById('host-btn-submeter-voto');
+            btnSub.disabled = (hostVotosSelecionados.length !== hostMaxVotos);
+            btnSub.innerText = "Confirmar Voto";
+        });
 
         socket.on('partida_iniciada_host', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
             clearInterval(intervaloTimer);
-            document.getElementById('painel-lobby').classList.add('escondido'); document.getElementById('painel-jogo').classList.remove('escondido');
-            document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido');
-            document.getElementById('primeiro-falar').innerText = dados.primeiro; document.getElementById('leitura-contagem').innerText = "0"; document.getElementById('leitura-total').innerText = dados.total_jogadores;
+            clearInterval(intervaloSuspense);
+            esconderTodosPaineis();
+            document.getElementById('painel-jogo').classList.remove('escondido');
+            document.getElementById('bloco-timer').classList.add('escondido');
+            document.getElementById('bloco-aguardando').classList.remove('escondido');
+            document.getElementById('primeiro-falar').innerText = dados.primeiro;
+            document.getElementById('leitura-contagem').innerText = "0";
+            document.getElementById('leitura-total').innerText = dados.total_jogadores;
         });
 
-        socket.on('travar_timer_host', () => { clearInterval(intervaloTimer); document.getElementById('bloco-timer').classList.add('escondido'); document.getElementById('bloco-aguardando').classList.remove('escondido'); });
+        socket.on('travar_timer_host', (dados) => {
+            if (dados && dados.iteracao !== undefined) {
+                local_fase = dados.fase || 'revelacao';
+                local_iteracao = dados.iteracao;
+            }
+            clearInterval(intervaloTimer);
+            document.getElementById('bloco-timer').classList.add('escondido');
+            document.getElementById('bloco-aguardando').classList.remove('escondido');
+        });
 
         socket.on('todos_leram_papeis', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
-            document.getElementById('bloco-aguardando').classList.add('escondido'); document.getElementById('bloco-timer').classList.remove('escondido');
-            let tempoRestante = dados.tempo; let tempoTotal = dados.tempo; const ampFill = document.getElementById('ampulheta-fill'); const display = document.getElementById('timer-restante');
-            display.innerText = tempoRestante + "s"; ampFill.style.width = '0%';
-            clearInterval(intervaloTimer);
-            intervaloTimer = setInterval(() => {
-                tempoRestante--; display.innerText = tempoRestante + "s"; let pct = ((tempoTotal - tempoRestante) / tempoTotal) * 100; ampFill.style.width = pct + '%';
-                if(tempoRestante <= 0) { clearInterval(intervaloTimer); irParaVotacao(); }
-            }, 1000);
+            iniciarContagemTimerHost(dados.tempo, dados.tempo_total || dados.tempo);
         });
 
-        function pularTimer() { clearInterval(intervaloTimer); irParaVotacao(); }
-        function irParaVotacao() { socket.emit('iniciar_votacao', { codigo: codigo_atual }); }
+        function pularTimer() {
+            clearInterval(intervaloTimer);
+            irParaVotacao();
+        }
+
+        function irParaVotacao() {
+            socket.emit('iniciar_votacao', authPayload());
+        }
 
         socket.on('votacao_iniciada_host', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
-            document.getElementById('painel-jogo').classList.add('escondido'); document.getElementById('painel-votacao').classList.remove('escondido');
-            document.getElementById('votos-contagem').innerText = "0"; if(dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
-            
-            if(souJogador && modoJogoAtual === 'host_jogador') openSlide(); // Abre a gaveta para o Host votar!
+            clearInterval(intervaloTimer);
+            esconderTodosPaineis();
+            document.getElementById('painel-votacao').classList.remove('escondido');
+            document.getElementById('votos-contagem').innerText = "0";
+            if (dados && dados.total_jogadores) document.getElementById('votos-total').innerText = dados.total_jogadores;
         });
 
-        // O HOST OUVE O VOTO E ATUALIZA A TV SEM NENHUM PROBLEMA
-        socket.on('voto_recebido_host', (dados) => { document.getElementById('votos-contagem').innerText = dados.total_votos; document.getElementById('votos-total').innerText = dados.total_jogadores; });
+        socket.on('voto_recebido_host', (dados) => {
+            document.getElementById('votos-contagem').innerText = dados.total_votos;
+            document.getElementById('votos-total').innerText = dados.total_jogadores;
+        });
 
         socket.on('resultado_votacao_host', (dados) => {
             local_fase = dados.fase;
             local_iteracao = dados.iteracao;
-            if (souJogador) { socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'resultado' }); }
-            
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido')); closeSlide(); document.getElementById('painel-suspense').classList.remove('escondido');
-            let count = 3; document.getElementById('contagem-regressiva').innerText = count;
-            let interval = setInterval(() => {
+            if (souJogador) {
+                socket.emit('confirmar_status', { codigo: codigo_atual, nome: meuNomeHost, status: 'resultado' });
+            }
+
+            if (host_resultado_iteracao_exibida === dados.iteracao) {
+                esconderTodosPaineis();
+                closeSlide();
+                mostrarResultadoFinal(dados);
+                return;
+            }
+            host_resultado_iteracao_exibida = dados.iteracao;
+
+            clearInterval(intervaloTimer);
+            clearInterval(intervaloSuspense);
+            esconderTodosPaineis();
+            closeSlide();
+            document.getElementById('painel-suspense').classList.remove('escondido');
+
+            let count = 3;
+            document.getElementById('contagem-regressiva').innerText = count;
+            intervaloSuspense = setInterval(() => {
                 count--;
-                if(count > 0) { document.getElementById('contagem-regressiva').innerText = count; } 
-                else {
-                    clearInterval(interval);
+                if (count > 0) {
+                    document.getElementById('contagem-regressiva').innerText = count;
+                } else {
+                    clearInterval(intervaloSuspense);
                     document.getElementById('painel-suspense').classList.add('escondido');
                     mostrarResultadoFinal(dados);
                 }
@@ -703,32 +1026,57 @@
             document.getElementById('painel-resultado').classList.remove('escondido');
             document.getElementById('titulo-revelacao').innerText = dados.destaques.length > 1 ? "E os Protagonistas foram..." : "E o Protagonista foi...";
             const blocoImps = document.getElementById('bloco-impostores-revelados');
-            
+
             let containerHtml = '<div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">';
             dados.destaques.forEach(d => {
                 let corPapel = d.papel === 'Impostor' ? '#e74c3c' : '#2ecc71';
                 let corStatus = d.status.includes('pego') || d.status.includes('executado') ? '#e74c3c' : '#2ecc71';
                 containerHtml += `<div style="text-align: center; background: #222; padding: 20px; border-radius: 12px; border: 2px solid ${corPapel}; min-width: 160px; max-width: 200px;"><div style="font-size: 70px; margin: 0; line-height: 1;">${d.emoji}</div><div style="font-size: 24px; font-weight: bold; color: white; margin-top: 10px;">${d.nome}</div><div style="font-size: 18px; color: ${corPapel}; font-weight: bold; text-transform: uppercase;">${d.papel}</div><div style="font-size: 16px; color: ${corStatus}; margin-top: 5px; font-weight: bold;">${d.status}</div></div>`;
             });
-            containerHtml += '</div>'; blocoImps.innerHTML = containerHtml;
+            containerHtml += '</div>';
+            blocoImps.innerHTML = containerHtml;
 
-            const blocoOutros = document.getElementById('bloco-outros-votados'); const listaOutros = document.getElementById('lista-outros-votados'); listaOutros.innerHTML = '';
-            if (dados.outros_votados.length > 0) { blocoOutros.style.display = 'block'; dados.outros_votados.forEach(out => { listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`; }); } else { blocoOutros.style.display = 'none'; }
-            document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
-            const ul = document.getElementById('lista-placar-atual'); ul.innerHTML = '';
-            for (const [nome, pts] of Object.entries(dados.pontos)) { ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`; }
-        }
-
-        function voltarAoLobby() { 
-            document.querySelectorAll('.container').forEach(c => c.classList.add('escondido'));
-            document.getElementById('painel-lobby').classList.remove('escondido');
-            document.getElementById('host-config-modo').classList.remove('escondido');
-            if (modoJogoAtual === 'host_jogador' && souJogador) {
-                document.getElementById('host-painel-espera').classList.remove('escondido');
-                document.getElementById('btn-iniciar-drawer').classList.remove('escondido');
+            const blocoOutros = document.getElementById('bloco-outros-votados');
+            const listaOutros = document.getElementById('lista-outros-votados');
+            listaOutros.innerHTML = '';
+            if (dados.outros_votados.length > 0) {
+                blocoOutros.style.display = 'block';
+                dados.outros_votados.forEach(out => {
+                    listaOutros.innerHTML += `<li>${out.emoji} ${out.nome} <span style="color:#e74c3c">(${out.votos} votos)</span></li>`;
+                });
+            } else {
+                blocoOutros.style.display = 'none';
             }
-            socket.emit('voltar_para_lobby', { codigo: codigo_atual }); 
+            document.getElementById('palavra-revelada').innerText = `A palavra secreta era: ${dados.palavra_atual}`;
+            const ul = document.getElementById('lista-placar-atual');
+            ul.innerHTML = '';
+            for (const [nome, pts] of Object.entries(dados.pontos)) {
+                ul.innerHTML += `<li style="background: #2c2c2c; padding: 10px 20px; border-radius: 6px; border: 1px solid #3a3a3a;"><strong>${nome}</strong>: ${pts} pts</li>`;
+            }
         }
+
+        function voltarAoLobby() {
+            socket.emit('voltar_para_lobby', authPayload());
+        }
+
+        socket.on('retorno_lobby_host', (dados) => {
+            local_fase = dados.fase || 'lobby';
+            local_iteracao = dados.iteracao || 0;
+            clearInterval(intervaloTimer);
+            clearInterval(intervaloSuspense);
+            esconderTodosPaineis();
+            document.getElementById('painel-lobby').classList.remove('escondido');
+            if (modoJogoAtual === 'host_jogador') {
+                esconderCaixasGaveta();
+                document.getElementById('host-config-modo').classList.remove('escondido');
+                if (souJogador) {
+                    document.getElementById('host-painel-espera').classList.remove('escondido');
+                } else {
+                    document.getElementById('host-painel-login').classList.remove('escondido');
+                }
+            }
+            validarBotaoIniciar();
+        });
 
         function pedirCoroacao(tipo) { socket.emit('solicitar_coroacao', { tipo: tipo }); }
         socket.on('receber_coroacao', (dados) => {
@@ -738,25 +1086,68 @@
             document.getElementById('titulo-coroacao').innerText = `👑 COROAÇÃO ${dados.tipo.toUpperCase()} 👑`;
             const div = document.getElementById('coroacao-conteudo');
             div.innerHTML = '';
-            if(dados.ranking.length === 0) { div.innerHTML = "<p>Nenhum dado registrado para este período.</p>"; return; }
+            if (dados.ranking.length === 0) {
+                div.innerHTML = "<p>Nenhum dado registrado para este período.</p>";
+                return;
+            }
             dados.ranking.forEach((pos, idx) => {
                 let medalha = idx === 0 ? "🏆" : (idx === 1 ? "🥈" : (idx === 2 ? "🥉" : "🎖️"));
-                div.innerHTML += `<div class="podio-item">${medalha} ${idx+1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
+                div.innerHTML += `<div class="podio-item">${medalha} ${idx + 1}º Lugar: ${pos.Jogador.toUpperCase()} - Média: ${pos['Média de Pontos']} (Total: ${pos['Pontuação Total']} pts)</div>`;
             });
         });
 
-        function fecharCoroacao() { document.getElementById('painel-coroacao').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
-        function abrirPainelBanco() { document.getElementById('painel-inicio').classList.add('escondido'); document.getElementById('painel-banco').classList.remove('escondido'); }
-        function fecharPainelBanco() { document.getElementById('painel-banco').classList.add('escondido'); document.getElementById('painel-inicio').classList.remove('escondido'); }
-        function resetarBanco(tipo) { if(confirm("Tem certeza da exclusão?")) socket.emit('resetar_banco', {tipo: tipo}); }
-        function deletarJogadorDB() {
-            let nome = document.getElementById('ipt-del-jogador').value.trim();
-            if(nome && confirm(`Apagar TODOS os dados de ${nome}?`)) {
-                socket.emit('deletar_jogador_banco', { nome: nome });
-                document.getElementById('ipt-del-jogador').value = "";
-            }
+        function fecharCoroacao() {
+            document.getElementById('painel-coroacao').classList.add('escondido');
+            document.getElementById('painel-inicio').classList.remove('escondido');
         }
-        socket.on('alerta_host', (dados) => { alert(dados.mensagem); if(dados.mensagem.includes("sucesso")) fecharPainelBanco(); });
+
+        function abrirPainelBanco() {
+            if (senhaAdminAtual) {
+                document.getElementById('painel-inicio').classList.add('escondido');
+                document.getElementById('painel-banco').classList.remove('escondido');
+                return;
+            }
+            const pwd = prompt("Digite a senha de Administrador para desbloquear:");
+            if (!pwd) return;
+            senhaAdminAtual = pwd;
+            socket.emit('validar_senha_admin', { senha: pwd });
+        }
+
+        socket.on('admin_autenticado', () => {
+            document.getElementById('painel-inicio').classList.add('escondido');
+            document.getElementById('painel-banco').classList.remove('escondido');
+        });
+
+        function fecharPainelBanco() {
+            document.getElementById('painel-banco').classList.add('escondido');
+            document.getElementById('painel-inicio').classList.remove('escondido');
+        }
+
+        function resetarBanco(tipo) {
+            if (!confirm("Tem certeza da exclusão?")) return;
+            const pwd = senhaAdminAtual || prompt("Digite a senha de Administrador:");
+            if (!pwd) return;
+            senhaAdminAtual = pwd;
+            socket.emit('resetar_banco', { tipo: tipo, senha: pwd });
+        }
+
+        function deletarJogadorDB() {
+            const nome = document.getElementById('ipt-del-jogador').value.trim();
+            if (!nome || !confirm(`Apagar TODOS os dados de ${nome}?`)) return;
+            const pwd = senhaAdminAtual || prompt("Digite a senha de Administrador:");
+            if (!pwd) return;
+            senhaAdminAtual = pwd;
+            socket.emit('deletar_jogador_banco', { nome: nome, senha: pwd });
+            document.getElementById('ipt-del-jogador').value = "";
+        }
+
+        socket.on('alerta_host', (dados) => {
+            if (dados.mensagem && dados.mensagem.toLowerCase().includes("senha")) {
+                senhaAdminAtual = "";
+            }
+            alert(dados.mensagem);
+            if (dados.mensagem && dados.mensagem.includes("sucesso")) fecharPainelBanco();
+        });
     </script>
 </body>
 </html>
